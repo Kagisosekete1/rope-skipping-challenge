@@ -493,6 +493,7 @@ export function Character({
   preview = false,
   handAnchor,
   anchorIndex = 0,
+  ropePhase,
 }) {
   const root = useRef(),
     body = useRef(),
@@ -517,17 +518,21 @@ export function Character({
     const playing = action === "play",
       welcome = action === "welcome",
       win = action === "victory",
-      jump = welcome
-        ? Math.max(0, Math.sin(t * 2.6)) * 0.67
-        : playing
-          ? jumpHeight(age)
-          : 0;
+      phase = ropePhase?.current ?? t * 2.6,
+      welcomeAge = (phase / 2.6 + 0.38) % ((Math.PI * 2) / 2.6),
+      jump = holderSide
+        ? 0
+        : welcome
+          ? jumpHeight(welcomeAge)
+          : playing
+            ? jumpHeight(age)
+            : 0;
     root.current.position.y = position[1] + jump;
     const s =
       1 -
       Math.max(0, Math.sin((age / 0.76) * Math.PI)) *
         0.06 *
-        (playing && age < 0.76 ? 1 : 0);
+        (playing && !holderSide && age < 0.76 ? 1 : 0);
     body.current.scale.set(1 + (1 - s) * 0.5, s, 1);
     body.current.rotation.z = holderSide
       ? holderSide * 0.07
@@ -550,7 +555,8 @@ export function Character({
         let z = side * (0.18 + jump * 0.6);
         let x = -0.1;
         if (holderSide) {
-          const phase = playing ? (match?.phase ?? 0) : t * 2.6;
+          const phase =
+            ropePhase?.current ?? (playing ? (match?.phase ?? 0) : t * 2.6);
           x = -0.55 + Math.sin(phase) * 0.24;
           z = side * 0.3;
         }
@@ -584,9 +590,10 @@ export function Character({
       hair.current.rotation.x = Math.sin(t * 2.6) * 0.12 + jump * 0.16;
       hair.current.rotation.z = Math.sin(t * 2) * 0.08;
     }
-  });
+  }, -2);
   return (
     <group
+      name={`character-${kind}`}
       ref={root}
       position={position}
       rotation={[0, rotation, 0]}

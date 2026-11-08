@@ -101,7 +101,9 @@ export class Match {
     this.difficulty = difficulty;
     this.current = 0;
     this.progress = [0, 0];
-    this.phase = Math.PI;
+    this.phase = 0;
+    this.readyStartPhase = 0;
+    this.readyTargetPhase = Math.PI;
     this.time = 0;
     this.elapsed = 0;
     this.state = "idle";
@@ -178,14 +180,24 @@ export class Match {
     if (this.state === "rolling" && this.elapsed > 1.7) {
       this.state = "ready";
       this.elapsed = 0;
+      this.readyStartPhase = this.phase;
+      this.readyTargetPhase = (Math.floor(this.phase / TAU) + 0.5) * TAU;
+      if (this.readyTargetPhase < this.phase) this.readyTargetPhase += TAU;
       this.feedback = `${this.needed} ${this.needed === 1 ? "jump" : "jumps"} — get ready!`;
       this.emit();
       return;
     }
+    if (this.state === "ready") {
+      const t = Math.min(1, this.elapsed / 1.4),
+        smooth = t * t * (3 - 2 * t);
+      this.phase =
+        this.readyStartPhase +
+        (this.readyTargetPhase - this.readyStartPhase) * smooth;
+    }
     if (this.state === "ready" && this.elapsed > 1.4) {
       this.state = "skipping";
       this.elapsed = 0;
-      this.phase = Math.PI;
+      this.phase = this.readyTargetPhase;
       this.jumpAge = 9;
       this.aiPlan();
       this.feedback = this.ai
@@ -199,7 +211,6 @@ export class Match {
       if (this.current === 0) this.round++;
       this.state = "idle";
       this.elapsed = 0;
-      this.phase = Math.PI;
       this.feedback = this.ai
         ? "Computer’s turn"
         : "Your turn — roll the dice!";

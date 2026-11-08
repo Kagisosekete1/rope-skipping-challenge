@@ -351,7 +351,7 @@ function Rope({ phase, anchors, color, paused }) {
         mesh.scale.y = dir.length() + 0.008;
       }
     }
-  });
+  }, -1);
   return (
     <group>
       {Array.from({ length: count }, (_, i) => (
@@ -468,7 +468,7 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
     if (screen === "gameplay") engine.current.tick(dt);
     phase.current =
       screen === "gameplay" ? engine.current.phase : clock.elapsedTime * 2.6;
-  });
+  }, -3);
   const customization = screen === "customize",
     reward = screen === "rewards",
     single = customization || reward;
@@ -573,6 +573,7 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
                   : "idle"
             }
             engine={engine}
+            ropePhase={phase}
           />
           <Character
             kind={1}
@@ -582,6 +583,7 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
             scale={portrait ? 0.84 : 1.1}
             action={screen === "gameplay" ? "play" : "idle"}
             engine={engine}
+            ropePhase={phase}
             holderSide={1}
             handAnchor={anchors}
             anchorIndex={0}
@@ -594,11 +596,13 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
             scale={portrait ? 0.84 : 1.1}
             action={screen === "gameplay" ? "play" : "idle"}
             engine={engine}
+            ropePhase={phase}
             holderSide={-1}
             handAnchor={anchors}
             anchorIndex={1}
           />
           <Rope
+            key={screen}
             phase={phase}
             anchors={anchors}
             color={ITEMS.rope[save.rope]?.color || gold}

@@ -16,6 +16,7 @@ Open the local address printed by Vite. For another device on the same network, 
 ```sh
 npm test
 npm run test:scene
+npm run test:ui
 npm run build
 npm run preview
 ```
@@ -49,7 +50,7 @@ No online multiplayer, global leaderboard, real-money purchase or ad service is 
 - `src/Scene.jsx`: PBR materials, soft directional shadows, contact-shadow pass on higher quality, locally rendered studio environment, sky, court, procedural graffiti texture, fence, trees and buildings. 3D dice have six pip faces and GSAP rotation.
 - `src/rope.js`: driven position-based rope simulation with inertia, gravity, length constraints, hand anchors and ground constraints. The holders drive its swing. Gameplay evaluates a predictable crossing phase so physics jitter cannot cause unfair misses; this is not a general rigid-body contact solver.
 - `src/game.js`: rendering-independent match state machine.
-- `src/main.jsx`: screen flow, live 3D item previews through shared Drei Views, local economy and controls.
+- `src/App.jsx`: screen flow, live 3D item previews through shared Drei Views, local economy and controls.
 - `src/styles.css`: responsive glossy interface and neon-bordered panels.
 
 Auto quality caps pixel density and disables the contact-shadow pass on devices reporting four or fewer logical cores; Battery saver forces this tier. Main shadows are 1024 or 2048 according to quality. These are conservative settings, not measured phone FPS guarantees.
@@ -58,10 +59,14 @@ Auto quality caps pixel density and disables the contact-shadow pass on devices 
 
 The seven supplied images guide the pink ponytail girl, blue curly-haired boy, yellow cap/braids girl, gold rope, pink court, saturated playground and blue/gold interface. The implementation is original procedural 3D, not an exact reproduction of the illustrations. Sculpted silhouette transitions, garment folds and film-quality facial deformation still need artist-made assets to approach the reference fidelity. See `ART-ASSETS.md` for precise requirements.
 
-Automated checks cover dice range, jump arc/cooldown, perfect scoring and bonuses, miss handling, pause, turn changes, rounds, winning, a complete AI match, save fallback and rope stability/anchors/ground/pause. Four additional scene-graph tests mount all three characters and hairstyle variants, advance their joint animations, verify finite mesh transforms and check world-space rope grip anchors using React Three Fiber’s mock renderer; the dice test checks 21 pips and no text geometry. These are not GPU-rendered screenshots. A production build is also required before release.
+Automated checks cover dice range, jump arc/cooldown, perfect scoring and bonuses, miss handling, pause, turn changes, rounds, winning, a complete AI match, save fallback and rope stability/anchors/ground/pause. Six additional scene-graph tests mount all three characters and hairstyle variants, advance their joint animations, verify finite mesh transforms and check world-space rope grip anchors using React Three Fiber’s mock renderer; the dice test checks 21 pips and no text geometry. The added scene checks keep rope holders grounded and align the welcome jump with the rope crossing. A DOM integration regression test traverses Welcome, Home, mode selection, a scored jump, pause/quit, shop purchase, customization, settings and rewards after React removes the splash. Its GPU layer is mocked; these are not GPU-rendered screenshots. A production build is also required before release.
 
 This rebuild has not yet received visual browser QA or physical-phone performance measurement: this session did not expose the managed shared-browser control tool. Do not interpret a passing production build or rules tests as visual acceptance. Verify Welcome first, then every screen at 390×844, 768×1024 and 1440×900, plus touch input, full matches, shop/save/reload, audio, installation and offline reload on real devices.
 
 ## Licensing
 
 Three.js attribution is in `public/licenses/THREE.txt`; bundled Helvetiker font attribution is in `public/fonts/LICENSE.txt`; Nunito uses the SIL Open Font License in `public/fonts/OFL-nunito.txt`. Dependency licenses remain with their packages. Original supplied reference crops are kept in `reference/` for art direction only; they are not loaded by the game.
+
+## 2.0.1 repair
+
+The splash now leaves the tree through React state rather than direct DOM removal, which invalidated React's next-screen insertion anchor and could unmount the UI. Rope holders no longer inherit the jumper's airborne motion. A shared phase is evaluated before character poses and the rope solver, and the welcome jump is centered on the underfoot crossing. The loop now sweeps from court level to 3.35 world units, above the grounded jumper's head. Wind-up moves continuously around the jumper, and turn changes preserve the current rope angle. The service worker prefers fresh HTML for online navigation while retaining an offline fallback.

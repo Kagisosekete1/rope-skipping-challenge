@@ -96,3 +96,54 @@ test("die is a rounded 3D mesh with 21 traditional pips and no text geometry", a
   );
   await r.unmount();
 });
+
+test("rope holders keep feet and knees planted while the jumper is airborne", async () => {
+  for (const side of [1, -1]) {
+    const kind = side === 1 ? 1 : 2,
+      engine = { current: { jumpAge: 0.38, phase: 0 } };
+    const r = await ReactThreeTestRenderer.create(
+      <Character
+        kind={kind}
+        look={defaultSave().looks[kind]}
+        position={[side * -2.55, 0, 0]}
+        holderSide={side}
+        engine={engine}
+        action="play"
+      />,
+    );
+    await r.advanceFrames(2, 1 / 60);
+    const character = r.scene.findAll(
+      (n) => n.instance?.name === `character-${kind}`,
+    )[0];
+    assert.equal(
+      character.instance.position.y,
+      0,
+      "holder root must not share the jump height",
+    );
+    for (const knee of r.scene.findAll((n) => n.instance?.name === "knee"))
+      assert.equal(knee.instance.rotation.x, 0);
+    await r.unmount();
+  }
+});
+test("Welcome jumps clear the feet at the bottom sweep and land before the overhead sweep", async () => {
+  const phase = { current: 0 };
+  const r = await ReactThreeTestRenderer.create(
+    <Character
+      kind={0}
+      look={defaultSave().looks[0]}
+      action="welcome"
+      ropePhase={phase}
+    />,
+  );
+  await r.advanceFrames(1, 1 / 60);
+  const root = r.scene.findAll((n) => n.instance?.name === "character-0")[0]
+    .instance;
+  assert.ok(
+    root.position.y > 0.9,
+    "jumper is airborne at the underfoot crossing",
+  );
+  phase.current = Math.PI;
+  await r.advanceFrames(1, 1 / 60);
+  assert.equal(root.position.y, 0, "jumper lands before the overhead crossing");
+  await r.unmount();
+});

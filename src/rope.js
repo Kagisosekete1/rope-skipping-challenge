@@ -12,15 +12,13 @@ export class RopePhysics {
   target(i, phase, a, b) {
     const u = i / this.count,
       s = Math.sin(u * Math.PI);
-    return new THREE.Vector3()
-      .lerpVectors(a, b, u)
-      .add(
-        new THREE.Vector3(
-          0,
-          -1.04 * Math.cos(phase) * s,
-          1.04 * Math.sin(phase) * s,
-        ),
-      );
+    const base = new THREE.Vector3().lerpVectors(a, b, u);
+    // The loop must sweep below the shoes and above the 2.8-unit jumper.
+    // Keeping the old hand-height +/- 1.04 path put the upper rope at eye level.
+    const centerY = 0.055 + (3.35 - 0.055) * (1 - Math.cos(phase)) * 0.5;
+    return base.add(
+      new THREE.Vector3(0, (centerY - base.y) * s, 1.35 * Math.sin(phase) * s),
+    );
   }
   step(dt, phase, a, b) {
     if (dt <= 0 && this.ready) return this.points;

@@ -31,3 +31,21 @@ test("rope freezes completely when paused", () => {
     before,
   );
 });
+
+test("loop sweeps below the shoes, in front/behind the jumper and above the head", () => {
+  const r = new RopePhysics(),
+    a = new THREE.Vector3(-2.1, 1, 0.1),
+    b = new THREE.Vector3(2.1, 1, 0.1),
+    mid = r.count / 2;
+  for (let i = 0; i < 150; i++) r.step(0.016, 0, a, b);
+  assert.ok(r.points[mid].y < 0.12, "bottom of loop stays near the court");
+  for (let i = 0; i < 150; i++) r.step(0.016, Math.PI / 2, a, b);
+  assert.ok(r.points[mid].z > 1.2, "front sweep clears the body in depth");
+  for (let i = 0; i < 150; i++) r.step(0.016, Math.PI, a, b);
+  assert.ok(
+    r.points[mid].y > 3.1,
+    "top sweep clears the grounded 2.8-unit character",
+  );
+  for (let i = 0; i < 150; i++) r.step(0.016, Math.PI * 1.5, a, b);
+  assert.ok(r.points[mid].z < -1, "back sweep passes behind the body");
+});

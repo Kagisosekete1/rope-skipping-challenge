@@ -134,3 +134,29 @@ test("saved data corruption falls back to defaults", () => {
     0,
   );
 });
+
+test("rope rests underfoot, winds up continuously and never teleports at a turn change", () => {
+  const m = new Match(
+    () => {},
+    () => 0.2,
+  );
+  assert.equal(m.phase, 0);
+  m.roll();
+  advance(m, 1.72);
+  assert.equal(m.state, "ready");
+  let before = m.phase;
+  for (let i = 0; i < 150; i++) {
+    m.tick(0.01);
+    assert.ok(m.phase >= before);
+    assert.ok(
+      m.phase - before < 0.08,
+      "wind-up must advance around the body without a phase jump",
+    );
+    before = m.phase;
+  }
+  while (m.state === "skipping") m.tick(0.01);
+  const resting = m.phase;
+  advance(m, 1.7);
+  assert.equal(m.state, "idle");
+  assert.equal(m.phase, resting, "turn handoff must preserve the rope angle");
+});
