@@ -23,6 +23,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       "002_social_and_points.sql",
       "003_online_challenges.sql",
       "004_avatar_storage.sql",
+      "005_progress_and_deletion.sql",
     ])
       await db.exec(
         await readFile(new URL("../supabase/" + file, import.meta.url), "utf8"),
@@ -185,10 +186,21 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
     ]);
     assert.equal(pending.wallet.points, 1150);
     assert.equal(pending.status, "cancelled");
+    await db.query("insert into public.practice_progress(user_id,save) values($1,$2)",[A,{wins:52}]);
+    await as(B);
+    assert.equal((await db.query("select * from public.practice_progress")).rows.length,0);
+    await assert.rejects(db.query("insert into public.practice_progress(user_id,save) values($1,$2)",[A,{wins:999}]),/row-level security/);
+    await as(C);
+    const open=await rpc("select public.create_challenge(10,gen_random_uuid()) as result");
+    await assert.rejects(db.exec("select public.delete_my_account()"),/Finish or cancel/);
+    await rpc("select public.challenge_action($1,'cancel',gen_random_uuid()) as result",[open.room_id]);
+    await db.exec("select public.delete_my_account()");
+    await admin();
+    assert.equal((await db.query("select id from auth.users where id=$1",[C])).rows.length,0);
     await db.exec("reset role;set role anon");
     const board = (await db.query("select * from public.get_leaderboard(100)"))
       .rows;
-    assert.equal(board.length, 3);
+    assert.equal(board.length, 2);
     assert.equal(board[0].username, "mofunk");
     assert.equal(board[0].country_code, "ZA");
     assert.equal("email" in board[0], false);

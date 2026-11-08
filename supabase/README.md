@@ -51,3 +51,14 @@ This schema is validated locally against an embedded PostgreSQL engine with a Su
 ## 2.2 upgrade
 
 For profiles with gallery photos/countries, public rankings, paid Freeze and online point challenges, run `upgrade-2.2.sql` after 001. It bundles migrations 002, 003 and 004. The owner has applied this upgrade. See the repository's `ONLINE.md` for the server authority, escrow/refund rules and current validation limits. Do not rerun 001 after applying the upgrade, because later migrations extend its signup behavior.
+
+## Progress and account deletion upgrade
+After upgrade-2.2.sql, run **005_progress_and_deletion.sql** in SQL Editor.
+It adds private practice saves (levels, cosmetics and device settings), isolated
+from trusted online point balances. The authenticated delete_my_account RPC
+refuses deletion until waiting/active challenges are finished or cancelled.
+Completed rooms involving the deleted account are removed; other users' wallets
+and settled balances are unchanged. The client removes owned gallery photos via
+Storage API before invoking deletion. No service key is shipped to browsers.
+Sign in and check Settings for a successful cloud save before reinstalling.
+Simultaneous devices use the latest completed save, not a merge of two matches.

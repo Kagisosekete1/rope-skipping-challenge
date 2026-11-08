@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import { localProfile } from "./profile-data.js";
 export function useAccount() {
+  const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState(null),
     [wallet, setWallet] = useState(null),
     [error, setError] = useState(""),
@@ -10,7 +11,7 @@ export function useAccount() {
     if (!supabase) return;
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active) setUser(data.session?.user || null);
+      if (active) { setUser(data.session?.user || null); setAuthReady(true); }
     });
     const { data } = supabase.auth.onAuthStateChange((_e, s) => {
       setUser(s?.user || null);
@@ -56,5 +57,5 @@ export function useAccount() {
   useEffect(() => {
     reload();
   }, [reload]);
-  return { user, profile, wallet, setWallet, error, reload, client: supabase };
+  return { authReady, user, profile, wallet, setWallet, error, reload, client: supabase };
 }

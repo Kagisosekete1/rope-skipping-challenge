@@ -6,6 +6,8 @@ import Scene from "./Scene";
 import { Character, Outfit, Shoe } from "./Character";
 import { Robot } from "./Robot";
 import Profile from "./Profile";
+import { SettingsExtras } from "./SettingsExtras";
+import { useCloudProgress } from "./useCloudProgress";
 import { useAccount } from "./useAccount";
 import { Leaderboard, OnlineLobby } from "./Community";
 import { OnlineMatch } from "./online";
@@ -163,6 +165,7 @@ function ViewClear() {
 }
 export default function App({ splashDelay = 1800 }) {
   const account = useAccount();
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [toolActor, setToolActor] = useState(0),
     [buyingFreeze, setBuyingFreeze] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -191,6 +194,7 @@ export default function App({ splashDelay = 1800 }) {
     [modal, setModal] = useState(null),
     [toast, setToast] = useState(""),
     [reward, setReward] = useState(null);
+  const cloud = useCloudProgress(account, save, setSave);
   const engine = useRef(null),
     root = useRef(),
     screenRef = useRef(screen),
@@ -282,7 +286,8 @@ export default function App({ splashDelay = 1800 }) {
         ...s,
         coins: s.coins + coins,
         xp: s.xp + xp,
-        wins: s.wins + (won ? 1 : 0),
+        wins: s.wins + (won || match.mode === "pvp" ? 1 : 0),
+        level: (s.level || 1) + (won || match.mode === "pvp" ? 1 : 0),
         matches: s.matches + 1,
         best: Math.max(s.best, match.best),
       }));
@@ -641,7 +646,7 @@ export default function App({ splashDelay = 1800 }) {
               <span>
                 <b>{save.profile.displayName}</b>
                 <small>
-                  LEVEL {Math.floor(save.xp / 200) + 1} · MY PROFILE
+                  LEVEL {save.level || 1} · MY PROFILE
                 </small>
               </span>
             </button>
@@ -819,7 +824,8 @@ export default function App({ splashDelay = 1800 }) {
           >
             {current.feedback}
           </div>
-          <div className="powerup-bar">
+          <button className="tools-toggle button blue" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)}>{toolsOpen ? "CLOSE TOOLS" : "⚡ TOOLS"}</button>
+          <div className={"powerup-bar " + (toolsOpen ? "tools-open" : "tools-closed")}>
             {current.mode === "pvp" && (
               <div className="tool-actor">
                 <button
@@ -850,7 +856,7 @@ export default function App({ splashDelay = 1800 }) {
                         : 0,
                   )
                 }
-                onClick={() => power(name)}
+                onClick={() => { power(name); setToolsOpen(false); }}
               >
                 <span>
                   {
@@ -1203,7 +1209,7 @@ export default function App({ splashDelay = 1800 }) {
                   Best streak <b>{reward.best} jumps</b>
                 </span>
                 <span>
-                  Level <b>{Math.floor(save.xp / 200) + 1}</b>
+                  Level <b>{save.level || 1}</b>
                 </span>
               </div>
               <Button className="continue" onClick={() => go("home")}>
@@ -1250,6 +1256,7 @@ export default function App({ splashDelay = 1800 }) {
           {header("", "SETTINGS")}
           <section className="settings-panel glass">
             <h2>Your playground, your rules</h2>
+            <SettingsExtras account={account} cloud={cloud} level={save.level || 1} onProfile={() => go("profile")} notify={notify} />
             {[
               ["sound", "Sound effects", "Jumps, dice and celebration"],
               ["music", "Music", "Rope Rush playlist · Volume 40%"],
@@ -1351,12 +1358,6 @@ export default function App({ splashDelay = 1800 }) {
                 can also install the PWA from your browser.
               </p>
             </div>
-            <button
-              className="text-button danger"
-              onClick={() => setModal("reset")}
-            >
-              Reset progress
-            </button>
           </section>
           {nav}
         </main>

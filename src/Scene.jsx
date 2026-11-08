@@ -135,6 +135,19 @@ function Tree({ at, scale = 1, seed = 0 }) {
     </group>
   );
 }
+function PlaygroundLife() {
+ const birds=useRef([]),walkers=useRef([]);
+ useFrame(({clock})=>{
+  const t=clock.elapsedTime;
+  birds.current.forEach((b,i)=>{if(!b)return;b.position.set(((t*.65+i*4)%30)-15,6+Math.sin(t*.5+i)*.5,-8-i*.4);b.children.forEach((w,j)=>w.rotation.z=(j?1:-1)*(.35+Math.sin(t*7+i)*.5));});
+  walkers.current.forEach((w,i)=>{if(!w)return;w.position.x=((t*.35+i*9)%30)-15;w.position.y=.04+Math.abs(Math.sin(t*3+i))*.025;});
+ });
+ return <group>
+ {[0,1,2,3,4].map(i=><group key={'bird'+i} ref={e=>birds.current[i]=e}>{[-1,1].map(side=><mesh key={side} position={[side*.15,0,0]} rotation={[0,0,side*.35]}><capsuleGeometry args={[.035,.3,4,8]}/><meshStandardMaterial color="#f9f1dc"/></mesh>)}</group>)}
+ {[0,1,2].map(i=><group key={'walker'+i} ref={e=>walkers.current[i]=e} position={[i*5,0,-6.7]} scale={.55}><Character kind={i} look={{outfit:i,hair:0,shoes:i,skin:i+1,style:0}} action="walk" /></group>)}
+ <group position={[0,2.9,-4.05]}><RoundedBox args={[7.7,1.15,.16]} radius={.15}><meshStandardMaterial color="#0539a0" metalness={.25} roughness={.3}/></RoundedBox><Center position={[0,.17,.12]}><Text3D font={import.meta.env.BASE_URL+'fonts/helvetiker_bold.typeface.json'} size={.38} height={.045} bevelEnabled bevelSize={.012} bevelThickness={.012}>ROPE SKIPPING<meshStandardMaterial color="#ffd327" metalness={.3} roughness={.25}/></Text3D></Center><Center position={[0,-.29,.12]}><Text3D font={import.meta.env.BASE_URL+'fonts/helvetiker_bold.typeface.json'} size={.23} height={.025}>CHALLENGE<meshStandardMaterial color="#eafbff"/></Text3D></Center></group>
+ </group>;
+}
 function Playground() {
   const graffiti = useMemo(graffitiTexture, []),
     ground = useMemo(courtTexture, []);
@@ -564,6 +577,7 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
         </Environment>
       </Suspense>
       <Playground />
+      <PlaygroundLife />
       {screen === "welcome" && (
         <Suspense fallback={null}>
           <Logo />

@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/*.test.js",
     "test:scene": "node scripts/test-scene.mjs",
-    "test:ui": "node scripts/test-ui.mjs && node scripts/test-ui.mjs account && node scripts/test-ui.mjs online",
+    "test:ui": "node scripts/test-ui.mjs && node scripts/test-ui.mjs account && node scripts/test-ui.mjs online && node scripts/test-ui.mjs progress",
     "android:build": "node scripts/build-android.mjs"
   },
   "dependencies": {

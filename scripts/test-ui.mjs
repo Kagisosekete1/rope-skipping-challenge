@@ -3,16 +3,17 @@ import { mkdir, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 await mkdir(".test-tmp", { recursive: true });
+const progress = process.argv[2] === "progress";
 const account = process.argv[2] === "account",
   online = process.argv[2] === "online";
-const path = online
+const path = progress ? ".test-tmp/progress-ui.mjs" : online
   ? ".test-tmp/online-ui.mjs"
   : account
     ? ".test-tmp/account-ui.mjs"
     : ".test-tmp/navigation.mjs";
 await build({
   entryPoints: [
-    online
+    progress ? "tests/progress-ui.jsx" : online
       ? "tests/online-ui.jsx"
       : account
         ? "tests/account-ui.jsx"

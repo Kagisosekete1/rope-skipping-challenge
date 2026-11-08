@@ -558,7 +558,7 @@ export function Character({
     ])
       if (arm.current) {
         let z = side * (0.18 + jump * 0.6);
-        let x = -0.1;
+        let x = action === "walk" ? Math.sin(t * 3 + side * 1.57) * .38 : -0.1;
         if (holderSide) {
           const phase =
             ropePhase?.current ?? (playing ? (match?.phase ?? 0) : t * 2.6);
@@ -579,9 +579,9 @@ export function Character({
       [rightLeg, 1],
     ])
       if (leg.current) {
-        leg.current.rotation.x = -jump * 0.62;
+        leg.current.rotation.x = action === "walk" ? Math.sin(t * 3 + side * 1.57) * .4 : -jump * 0.62;
         leg.current.rotation.z = side * 0.025;
-        leg.current.getObjectByName("knee").rotation.x = jump * 1.15;
+        leg.current.getObjectByName("knee").rotation.x = action === "walk" ? Math.max(0, Math.sin(t * 3 + side * 1.57)) * .45 : jump * 1.15;
       }
     if (handAnchor && holderSide) {
       root.current.updateWorldMatrix(true, true);
