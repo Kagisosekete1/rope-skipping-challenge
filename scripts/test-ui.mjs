@@ -3,19 +3,28 @@ import { mkdir, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 await mkdir(".test-tmp", { recursive: true });
-const path = ".test-tmp/navigation.mjs";
+const account = process.argv[2] === "account";
+const path = account ? ".test-tmp/account-ui.mjs" : ".test-tmp/navigation.mjs";
 await build({
-  entryPoints: ["tests/navigation.jsx"],
+  entryPoints: [account ? "tests/account-ui.jsx" : "tests/navigation.jsx"],
   outfile: path,
   bundle: true,
   format: "esm",
   platform: "node",
   packages: "external",
+  define: { "import.meta.env": "{}" },
   loader: { ".jsx": "jsx" },
   plugins: [
     {
       name: "mock-gpu-only",
       setup(b) {
+        b.onResolve({ filter: /dom-environment\.js$/ }, () => ({
+          path: resolve("tests/dom-environment.js"),
+          external: true,
+        }));
+        b.onResolve({ filter: /^\.\/supabase$/ }, () => ({
+          path: resolve("tests/mocks/supabase.js"),
+        }));
         b.onResolve({ filter: /^\.\/Scene$/ }, () => ({
           path: resolve("tests/mocks/Scene.jsx"),
         }));

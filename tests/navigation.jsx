@@ -1,6 +1,6 @@
+import { dom } from "./dom-environment.js";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { JSDOM } from "jsdom";
 import test from "node:test";
 import assert from "node:assert/strict";
 import gsap from "gsap";
@@ -21,18 +21,6 @@ async function click(node) {
   });
 }
 test("navigation survives splash removal; real controls, purchases and saves keep working", async () => {
-  const dom = new JSDOM('<!doctype html><div id="root"></div>', {
-    url: "https://game.test/",
-    pretendToBeVisual: true,
-  });
-  Object.assign(globalThis, {
-    window: dom.window,
-    document: dom.window.document,
-    localStorage: dom.window.localStorage,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-  });
   const errors = [];
   const root = createRoot(document.getElementById("root"), {
     onUncaughtError: (e) => errors.push(e),
@@ -51,6 +39,27 @@ test("navigation survives splash removal; real controls, purchases and saves kee
       document.querySelector(".home"),
       "Welcome PLAY reaches Home after splash",
     );
+    await click(document.querySelector('[aria-label="Your profile"]'));
+    assert.ok(document.querySelector(".profile"));
+    await act(async () => {
+      const input = document.getElementById("player-name");
+      Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      ).set.call(input, "Crew Captain");
+      input.dispatchEvent(new window.Event("input", { bubbles: true }));
+    });
+    await click(document.querySelector('[aria-label="blue profile avatar"]'));
+    await click(button("SAVE PROFILE"));
+    assert.equal(
+      JSON.parse(localStorage.getItem("rsc_v2")).profile.displayName,
+      "Crew Captain",
+    );
+    assert.equal(
+      JSON.parse(localStorage.getItem("rsc_v2")).profile.avatar,
+      "blue",
+    );
+    await click(document.querySelector('[aria-label="Back to home"]'));
     await click(button("LET’S PLAY"));
     assert.ok(document.querySelector(".select"), "Home reaches mode selection");
     await click(button("PLAY"));

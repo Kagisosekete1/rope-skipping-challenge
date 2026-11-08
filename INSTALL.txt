@@ -1,6 +1,6 @@
 Rope Skipping Challenge v2
 
-1. Install Node.js 20.19+ or 22.12+.
+1. Install Node.js 22.12+ or 24.
 2. In this project folder run: npm ci
 3. Run: npm run dev
 4. Open the address printed by Vite.

@@ -15,7 +15,7 @@ The browser uses only the publishable key. It is intentionally public and subjec
    Add your localhost development URL with `?profile=1` only if testing locally.
 5. Open the game's Home screen, select **My Profile**, choose **Create an account**, confirm the email, sign in and save the profile.
 
-The site's existing ChatGPT access boundary is retained. A private Site still asks you to access it with ChatGPT before game-account sign-in. This change does not make the Site public.
+The Site's existing sharing settings are preserved. A private Site still asks you to access it with ChatGPT before game-account sign-in. This change does not make the Site public.
 
 ## Tables
 
@@ -46,4 +46,4 @@ Supabase Auth supplies `auth.users`, email verification, password hashing and se
 
 Email signup/sign-in/sign-out and the profile's name/avatar use Supabase. Guest profiles still work on the device. Coins, gameplay statistics, purchases and crew customization currently continue using the game's existing local save. The tables/RPCs for those features are ready for a later server-integration pass; they are not silently treated as authoritative cloud progress. A trusted match-validation backend is still needed before cloud currency rewards can be enabled safely.
 
-This schema is validated locally against an embedded PostgreSQL engine with a Supabase Auth/role test harness. Dashboard application and a real email-confirmation/sign-in round trip must still be verified on your project.
+This schema is validated locally against an embedded PostgreSQL engine with a Supabase Auth/role test harness. The owner has applied the SQL, and the live catalog API responds successfully. A real email-confirmation/sign-in round trip must still be verified with the owner’s account.

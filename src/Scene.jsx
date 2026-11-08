@@ -12,6 +12,7 @@ import {
 import * as THREE from "three";
 import gsap from "gsap";
 import { Character } from "./Character";
+import { Robot } from "./Robot";
 import { RopePhysics } from "./rope";
 import { ITEMS } from "./game";
 const gold = "#ffd323";
@@ -432,7 +433,7 @@ function CameraRig({ screen }) {
     if (screen === "welcome") {
       pos = portrait ? [0, 2.85, 10.8] : [0, 2.65, 8.8];
       look = [0, 2.37, 0];
-    } else if (screen === "customize") {
+    } else if (["customize", "profile"].includes(screen)) {
       pos = portrait ? [0, 2.1, 7.9] : [0, 2.0, 7.5];
       look = [portrait ? 0 : 1, portrait ? 0.0 : 1.3, 0];
     } else if (screen === "rewards") {
@@ -449,6 +450,35 @@ function CameraRig({ screen }) {
     camera.updateProjectionMatrix();
   });
   return null;
+}
+export function ActiveJumper({
+  screen,
+  match,
+  looks,
+  portrait,
+  engine,
+  phase,
+}) {
+  const scale = portrait ? 1.08 : 1.18;
+  if (screen === "gameplay" && match.mode === "cpu" && match.current === 1)
+    return <Robot scale={scale} action="play" engine={engine} />;
+  const kind = match?.mode === "pvp" && match.current === 1 ? 1 : 0;
+  return (
+    <Character
+      kind={kind}
+      look={looks[kind]}
+      scale={scale}
+      action={
+        screen === "welcome"
+          ? "welcome"
+          : screen === "gameplay"
+            ? "play"
+            : "idle"
+      }
+      engine={engine}
+      ropePhase={phase}
+    />
+  );
 }
 function World({ screen, engine, save, selection, lookDraft, match, quality }) {
   const phase = useRef(0),
@@ -471,7 +501,13 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
   }, -3);
   const customization = screen === "customize",
     reward = screen === "rewards",
-    single = customization || reward;
+    profileFocus = screen === "profile",
+    profileKind = Math.max(
+      0,
+      ["pink", "blue", "yellow"].indexOf(save.profile?.avatar),
+    ),
+    customLayout = customization || profileFocus,
+    single = customLayout || reward;
   const looks = save.looks.map((l, i) =>
     customization && selection === i ? lookDraft : l,
   );
@@ -527,14 +563,14 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
       {single ? (
         <>
           <mesh
-            position={[customization && !portrait ? -0.9 : 0, 0.08, 0]}
+            position={[customLayout && !portrait ? -0.9 : 0, 0.08, 0]}
             receiveShadow
           >
             <cylinderGeometry args={[1.03, 1.13, 0.16, 64]} />
             <Pbr color="#0462c5" metalness={0.5} roughness={0.3} />
           </mesh>
           <mesh
-            position={[customization && !portrait ? -0.9 : 0, 0.175, 0]}
+            position={[customLayout && !portrait ? -0.9 : 0, 0.175, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
           >
             <ringGeometry args={[0.91, 0.97, 64]} />
@@ -544,36 +580,42 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
               emissiveIntensity={2}
             />
           </mesh>
-          <Character
-            kind={customization ? selection : 0}
-            look={looks[customization ? selection : 0]}
-            position={[
-              customization && !portrait ? -0.9 : 0,
-              customization && portrait ? 0.45 : 0.19,
-              0,
-            ]}
-            rotation={0.14}
-            scale={customization && portrait ? 0.85 : 1.15}
-            action={reward ? "victory" : "idle"}
-            preview
-          />
+          {reward && match.mode === "cpu" && match.winner === 1 ? (
+            <Robot position={[0, 0.19, 0]} scale={1.15} action="victory" />
+          ) : (
+            <>
+              {" "}
+              <Character
+                kind={
+                  customization ? selection : profileFocus ? profileKind : 0
+                }
+                look={
+                  looks[
+                    customization ? selection : profileFocus ? profileKind : 0
+                  ]
+                }
+                position={[
+                  customLayout && !portrait ? -0.9 : 0,
+                  customLayout && portrait ? 0.45 : 0.19,
+                  0,
+                ]}
+                rotation={0.14}
+                scale={customLayout && portrait ? 0.85 : 1.15}
+                action={reward ? "victory" : "idle"}
+                preview
+              />
+            </>
+          )}
         </>
       ) : (
         <>
-          <Character
-            kind={match?.mode === "pvp" && match.current === 1 ? 1 : 0}
-            look={looks[match?.mode === "pvp" && match.current === 1 ? 1 : 0]}
-            position={[0, 0, 0]}
-            scale={portrait ? 1.08 : 1.18}
-            action={
-              screen === "welcome"
-                ? "welcome"
-                : screen === "gameplay"
-                  ? "play"
-                  : "idle"
-            }
+          <ActiveJumper
+            screen={screen}
+            match={match}
+            looks={looks}
+            portrait={portrait}
             engine={engine}
-            ropePhase={phase}
+            phase={phase}
           />
           <Character
             kind={1}

@@ -4,7 +4,7 @@ A playable browser game built with React 19, Three.js, React Three Fiber, Drei a
 
 ## Run
 
-Requires Node.js 20.19+ or 22.12+.
+Requires Node.js 22.12+ (Node 24 is also supported).
 
 ```sh
 npm ci
@@ -36,11 +36,11 @@ Welcome → Play → Home → Let's Play → Select Mode → Play.
 - Desktop: Space rolls/jumps; Escape pauses. On mobile use the on-screen controls.
 - The match pauses when the tab is hidden.
 
-Completed solo wins award 250 coins and 50 XP; losses 80 coins and 20 XP. A two-player match awards 200 coins. Rewards are issued once per completed match. Progress, purchases, character looks and settings save on the current browser/device.
+Completed solo wins award 250 coins and 50 XP; losses 80 coins and 20 XP. A two-player match awards 200 coins. Rewards are issued once per completed match. Progress, purchases, character looks and settings save on the current browser/device. Player names and crew avatars can also sync through Supabase accounts.
 
 ## Screens
 
-Welcome features an extruded 3D logo, animated skipping and a gold Play button. Home links to mode selection and customization. Select Mode includes live 3D character/robot previews. Gameplay has a pip-only 3D die, timing meter, progress bars, jump feedback, turn handling and pause/quit. Customization changes the crew's outfits, hair colors/styles, skin tones, shoes and rope. Match Rewards shows the earned coins, XP and best streak. The Shop displays 3D items, charges earned coins, unlocks items and equips owned ropes. Settings controls sound, music and rendering quality, explains the rules, shows statistics, installs the app and offers a confirmed progress reset.
+Welcome features an extruded 3D logo, animated skipping and a gold Play button. Home links to mode selection, customization and My Profile. Select Mode includes live 3D character/robot previews. Gameplay has a pip-only 3D die, timing meter, progress bars, jump feedback, turn handling and pause/quit. Customization changes the crew's outfits, hair colors/styles, skin tones, shoes and rope. Match Rewards shows the earned coins, XP and best streak. The Shop displays 3D items, charges earned coins, unlocks items and equips owned ropes. Settings controls sound, the five-track Rope Rush playlist at 40% volume, and rendering quality, explains the rules, shows statistics, installs the app and offers a confirmed progress reset.
 
 No online multiplayer, global leaderboard, real-money purchase or ad service is implied by these local game modes.
 
@@ -70,3 +70,10 @@ Three.js attribution is in `public/licenses/THREE.txt`; bundled Helvetiker font 
 ## 2.0.1 repair
 
 The splash now leaves the tree through React state rather than direct DOM removal, which invalidated React's next-screen insertion anchor and could unmount the UI. Rope holders no longer inherit the jumper's airborne motion. A shared phase is evaluated before character poses and the rope solver, and the welcome jump is centered on the underfoot crossing. The loop now sweeps from court level to 3.35 world units, above the grounded jumper's head. Wind-up moves continuously around the jumper, and turn changes preserve the current rope angle. The service worker prefers fresh HTML for online navigation while retaining an offline fallback.
+
+## 2.1 — profiles, Rope Rush and BeatBot
+
+- Home → the player name / My Profile opens the profile screen. Players can save a guest name/avatar or create an email/password account, confirm the email, sign in, save their account profile and sign out. Supabase setup and the complete eleven-table schema are in [`supabase/README.md`](supabase/README.md). Names/avatars sync now; gameplay progress and currency remain local until trusted match validation is integrated.
+- The five supplied MP3s replace the synthesized background melody. They stream in order, cycle back to the first song, pause when hidden, and resume after a user gesture. Music volume is 40%, with a Web Audio gain path for mobile browsers that ignore the HTML media volume setting. Music starts enabled once on upgrading to this playlist; later user on/off choices are preserved. Songs are not precached during app installation, so the initial game cache does not download the entire soundtrack.
+- BeatBot is an original, articulated 3D computer competitor. Computer turns, computer victories and the mode preview use the same robot model. The player's crew characters remain human-player characters.
+- Additional tests cover real React name editing/profile navigation, mocked email signup/sign-in/profile-save/sign-out, playlist order/volume/pause, robot turn selection, and the SQL's policies/transactions in embedded PostgreSQL. No real signup email is sent by the test suite.

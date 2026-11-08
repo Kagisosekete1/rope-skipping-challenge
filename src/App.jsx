@@ -4,8 +4,10 @@ import { View, PerspectiveCamera, RoundedBox } from "@react-three/drei";
 import gsap from "gsap";
 import Scene from "./Scene";
 import { Character, Outfit, Shoe } from "./Character";
+import { Robot } from "./Robot";
+import Profile from "./Profile";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
-import { tone, music } from "./audio";
+import { tone, music, unlockMusic } from "./audio";
 function Icon({ name, size = 26 }) {
   const paths = {
     back: "m15 5-7 7 7 7",
@@ -125,44 +127,7 @@ function ModePreview({ mode, looks }) {
       <directionalLight position={[-2, 3, 4]} intensity={3.3} />
       <directionalLight position={[2, 3, -2]} intensity={2} color="#9bedff" />
       {mode === "cpu" ? (
-        <group position={[-0.52, 1.5, 0]}>
-          <RoundedBox args={[0.78, 0.64, 0.55]} radius={0.18} smoothness={5}>
-            <meshStandardMaterial
-              color="#e8f4ff"
-              roughness={0.25}
-              metalness={0.25}
-            />
-          </RoundedBox>
-          <RoundedBox
-            args={[0.63, 0.43, 0.1]}
-            radius={0.14}
-            position={[0, 0, 0.28]}
-          >
-            <meshStandardMaterial color="#05182f" roughness={0.2} />
-          </RoundedBox>
-          {[-0.15, 0.15].map((x) => (
-            <mesh key={x} position={[x, 0.035, 0.345]} scale={[1, 1.3, 0.3]}>
-              <sphereGeometry args={[0.055, 20, 16]} />
-              <meshStandardMaterial
-                color="#24f6ff"
-                emissive="#00bbff"
-                emissiveIntensity={2}
-              />
-            </mesh>
-          ))}
-          <mesh position={[0, -0.11, 0.35]}>
-            <boxGeometry args={[0.14, 0.017, 0.01]} />
-            <meshBasicMaterial color="#1feaff" />
-          </mesh>
-          <mesh position={[0, -0.56, 0]}>
-            <sphereGeometry args={[0.3, 24, 20]} />
-            <meshStandardMaterial
-              color="#f4faff"
-              roughness={0.25}
-              metalness={0.25}
-            />
-          </mesh>
-        </group>
+        <Robot position={[-0.52, -0.27, 0]} scale={0.95} rotation={0.15} />
       ) : (
         <Character
           kind={1}
@@ -200,7 +165,11 @@ export default function App({ splashDelay = 1800 }) {
   }, [splashDelay]);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [save, setSave] = useState(() => loadSave(localStorage)),
-    [screen, setScreen] = useState("welcome"),
+    [screen, setScreen] = useState(() =>
+      new URLSearchParams(window.location.search).has("profile")
+        ? "profile"
+        : "welcome",
+    ),
     [match, setMatch] = useState(null),
     [mode, setMode] = useState("cpu"),
     [difficulty, setDifficulty] = useState("Normal"),
@@ -246,9 +215,9 @@ export default function App({ splashDelay = 1800 }) {
     screenRef.current = screen;
   }, [screen]);
   useEffect(() => {
-    music(save.music && screen !== "welcome");
+    music(save.music && !document.hidden);
     return () => music(false);
-  }, [save.music, screen === "welcome"]);
+  }, [save.music]);
   useEffect(() => {
     if (!match) return;
     const sound = saveRef.current.sound;
@@ -279,6 +248,15 @@ export default function App({ splashDelay = 1800 }) {
     }
   }, [match]);
   useEffect(() => {
+    const unlock = () => unlockMusic();
+    window.addEventListener("pointerdown", unlock, { passive: true });
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+  useEffect(() => {
     const onKey = (e) => {
       if (e.repeat || ["INPUT", "SELECT"].includes(e.target.tagName)) return;
       if (screenRef.current === "gameplay") {
@@ -293,6 +271,7 @@ export default function App({ splashDelay = 1800 }) {
       }
     };
     const hide = () => {
+      music(saveRef.current.music && !document.hidden);
       if (
         document.hidden &&
         screenRef.current === "gameplay" &&
@@ -469,9 +448,19 @@ export default function App({ splashDelay = 1800 }) {
       {screen === "home" && (
         <main className="home screen-enter">
           <div className="home-top">
-            <span className="level">
-              <Icon name="star" /> LEVEL {Math.floor(save.xp / 200) + 1}
-            </span>
+            <button
+              className="level profile-link"
+              onClick={() => go("profile")}
+              aria-label="Your profile"
+            >
+              <Icon name="face" />
+              <span>
+                <b>{save.profile.displayName}</b>
+                <small>
+                  LEVEL {Math.floor(save.xp / 200) + 1} · MY PROFILE
+                </small>
+              </span>
+            </button>
             <button className="wallet" onClick={() => go("shop")}>
               <Coin />
               {save.coins.toLocaleString()}
@@ -583,9 +572,9 @@ export default function App({ splashDelay = 1800 }) {
               >
                 <div className="player-name">
                   {i === 0
-                    ? "Player 1"
+                    ? save.profile.displayName
                     : current.mode === "cpu"
-                      ? "Computer"
+                      ? "BeatBot"
                       : "Player 2"}
                 </div>
                 <div className="progress">
@@ -602,7 +591,7 @@ export default function App({ splashDelay = 1800 }) {
               {current.current === 0
                 ? "Player 1"
                 : current.mode === "cpu"
-                  ? "Computer"
+                  ? "BeatBot"
                   : "Player 2"}
               ’s turn
             </span>
@@ -937,6 +926,16 @@ export default function App({ splashDelay = 1800 }) {
           </div>
         </main>
       )}
+      {screen === "profile" && (
+        <main className="page profile screen-enter">
+          {header("PLAYER", "PROFILE")}
+          <Profile
+            profile={save.profile}
+            onSave={(value) => setSave((s) => ({ ...s, profile: value }))}
+            onNotify={notify}
+          />
+        </main>
+      )}
       {screen === "settings" && (
         <main className="page settings screen-enter">
           {header("", "SETTINGS")}
@@ -944,7 +943,7 @@ export default function App({ splashDelay = 1800 }) {
             <h2>Your playground, your rules</h2>
             {[
               ["sound", "Sound effects", "Jumps, dice and celebration"],
-              ["music", "Music", "A gentle playground melody"],
+              ["music", "Music", "Rope Rush playlist · Volume 40%"],
             ].map(([k, label, desc]) => (
               <div className="setting" key={k}>
                 <div>

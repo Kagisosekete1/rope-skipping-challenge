@@ -1,3 +1,4 @@
+import { localProfile } from "./profile-data.js";
 export const TAU = Math.PI * 2;
 export const COLORS = [
   "#fc278b",
@@ -42,6 +43,7 @@ export const ITEMS = {
 };
 export function defaultSave() {
   return {
+    profile: localProfile(),
     coins: 2450,
     xp: 0,
     wins: 0,
@@ -55,7 +57,8 @@ export function defaultSave() {
     ],
     rope: 0,
     sound: true,
-    music: false,
+    music: true,
+    musicVersion: 1,
     quality: "auto",
   };
 }
@@ -67,6 +70,9 @@ export function loadSave(storage) {
     return {
       ...base,
       ...raw,
+      profile: localProfile(raw.profile),
+      music: raw.musicVersion === 1 ? !!raw.music : true,
+      musicVersion: 1,
       coins: Math.max(0, Number(raw.coins) || 0),
       owned: [
         ...new Set([
@@ -201,7 +207,7 @@ export class Match {
       this.jumpAge = 9;
       this.aiPlan();
       this.feedback = this.ai
-        ? "Computer is jumping…"
+        ? "BeatBot is jumping…"
         : "Tap as the needle reaches green!";
       this.emit();
       return;
@@ -211,9 +217,7 @@ export class Match {
       if (this.current === 0) this.round++;
       this.state = "idle";
       this.elapsed = 0;
-      this.feedback = this.ai
-        ? "Computer’s turn"
-        : "Your turn — roll the dice!";
+      this.feedback = this.ai ? "BeatBot’s turn" : "Your turn — roll the dice!";
       this.emit();
       return;
     }

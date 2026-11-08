@@ -147,3 +147,36 @@ test("Welcome jumps clear the feet at the bottom sweep and land before the overh
   assert.equal(root.position.y, 0, "jumper lands before the overhead crossing");
   await r.unmount();
 });
+
+test("computer turns use BeatBot, while human turns keep the crew characters", async () => {
+  const { ActiveJumper } = await import("../src/Scene.jsx");
+  const looks = defaultSave().looks;
+  for (const [mode, current, name] of [
+    ["cpu", 0, "character-0"],
+    ["cpu", 1, "beatbot"],
+    ["pvp", 1, "character-1"],
+  ]) {
+    const engine = { current: { jumpAge: 0.38, phase: 0 } };
+    const r = await ReactThreeTestRenderer.create(
+      <ActiveJumper
+        screen="gameplay"
+        match={{ mode, current }}
+        looks={looks}
+        engine={engine}
+        phase={{ current: 0 }}
+      />,
+    );
+    await r.advanceFrames(2, 1 / 60);
+    assert.equal(r.scene.findAll((n) => n.instance?.name === name).length, 1);
+    if (name === "beatbot") {
+      assert.equal(
+        r.scene.findAll((n) => n.instance?.name === "character-0").length,
+        0,
+      );
+      assert.ok(
+        r.scene.findAll((n) => n.instance?.name === "robot-knee").length === 2,
+      );
+    }
+    await r.unmount();
+  }
+});
