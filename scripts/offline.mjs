@@ -5,7 +5,11 @@ async function walk(dir) {
   for (const f of await readdir(dir, { withFileTypes: true })) {
     const p = join(dir, f.name);
     if (f.isDirectory()) await walk(p);
-    else if (f.name !== "sw.js" && !p.startsWith("dist/music/"))
+    else if (
+      f.name !== "sw.js" &&
+      !p.startsWith("dist/music/") &&
+      !p.startsWith("dist/downloads/")
+    )
       files.push("./" + p.replace(/^dist\//, ""));
   }
 }

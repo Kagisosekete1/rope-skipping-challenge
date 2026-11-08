@@ -3,10 +3,21 @@ import { mkdir, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 await mkdir(".test-tmp", { recursive: true });
-const account = process.argv[2] === "account";
-const path = account ? ".test-tmp/account-ui.mjs" : ".test-tmp/navigation.mjs";
+const account = process.argv[2] === "account",
+  online = process.argv[2] === "online";
+const path = online
+  ? ".test-tmp/online-ui.mjs"
+  : account
+    ? ".test-tmp/account-ui.mjs"
+    : ".test-tmp/navigation.mjs";
 await build({
-  entryPoints: [account ? "tests/account-ui.jsx" : "tests/navigation.jsx"],
+  entryPoints: [
+    online
+      ? "tests/online-ui.jsx"
+      : account
+        ? "tests/account-ui.jsx"
+        : "tests/navigation.jsx",
+  ],
   outfile: path,
   bundle: true,
   format: "esm",

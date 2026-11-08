@@ -16,6 +16,10 @@ export function localProfile(value) {
   return {
     displayName: normalizeName(value?.displayName) || "Player 1",
     avatar: AVATARS.includes(value?.avatar) ? value.avatar : "pink",
+    username: value?.username || "",
+    countryCode: value?.countryCode || "",
+    photoPath: value?.photoPath || null,
+    leaderboardVisible: value?.leaderboardVisible !== false,
   };
 }
 

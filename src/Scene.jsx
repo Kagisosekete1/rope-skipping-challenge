@@ -8,6 +8,7 @@ import {
   Sky,
   Environment,
   Lightformer,
+  Sparkles,
 } from "@react-three/drei";
 import * as THREE from "three";
 import gsap from "gsap";
@@ -462,7 +463,8 @@ export function ActiveJumper({
   const scale = portrait ? 1.08 : 1.18;
   if (screen === "gameplay" && match.mode === "cpu" && match.current === 1)
     return <Robot scale={scale} action="play" engine={engine} />;
-  const kind = match?.mode === "pvp" && match.current === 1 ? 1 : 0;
+  const kind =
+    ["pvp", "online"].includes(match?.mode) && match.current === 1 ? 1 : 0;
   return (
     <Character
       kind={kind}
@@ -507,7 +509,14 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
       ["pink", "blue", "yellow"].indexOf(save.profile?.avatar),
     ),
     customLayout = customization || profileFocus,
-    single = customLayout || reward;
+    single = customLayout || reward,
+    heroKind = customization
+      ? selection
+      : profileFocus
+        ? profileKind
+        : reward && ["pvp", "online"].includes(match.mode) && match.winner === 1
+          ? 1
+          : 0;
   const looks = save.looks.map((l, i) =>
     customization && selection === i ? lookDraft : l,
   );
@@ -586,14 +595,8 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
             <>
               {" "}
               <Character
-                kind={
-                  customization ? selection : profileFocus ? profileKind : 0
-                }
-                look={
-                  looks[
-                    customization ? selection : profileFocus ? profileKind : 0
-                  ]
-                }
+                kind={heroKind}
+                look={looks[heroKind]}
                 position={[
                   customLayout && !portrait ? -0.9 : 0,
                   customLayout && portrait ? 0.45 : 0.19,
@@ -652,15 +655,42 @@ function World({ screen, engine, save, selection, lookDraft, match, quality }) {
           />
         </>
       )}
-      {screen === "gameplay" &&
-        ["rolling", "ready", "idle"].includes(match.state) && (
-          <Dice
-            value={match.needed || 1}
-            rolling={match.state === "rolling"}
-            position={[0, 3.05, 0.6]}
-            scale={match.state === "idle" ? 0.42 : 0.65}
+      {screen === "gameplay" && (
+        <>
+          <Sparkles
+            count={match.effects?.[match.current]?.boost ? 24 : 8}
+            scale={[3.6, 2.8, 2]}
+            position={[0, 1.1, 0]}
+            size={3}
+            speed={0.7}
+            opacity={0.55}
+            color={match.frozen?.[match.current] ? "#77eaff" : "#ffe86a"}
           />
-        )}
+          {match.effects?.[match.current]?.shield && (
+            <mesh position={[0, 1.35, 0]}>
+              <sphereGeometry args={[1.5, 24, 16]} />
+              <meshPhysicalMaterial
+                color="#53dfff"
+                transparent
+                opacity={0.13}
+                roughness={0.1}
+                metalness={0.2}
+                depthWrite={false}
+              />
+            </mesh>
+          )}
+          {match.frozen?.[match.current] && (
+            <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.65, 0.035, 8, 48]} />
+              <meshStandardMaterial
+                color="#91f5ff"
+                emissive="#32d9ff"
+                emissiveIntensity={2}
+              />
+            </mesh>
+          )}
+        </>
+      )}
       {quality === "high" && (
         <ContactShadows
           position={[0, 0.018, 0]}
@@ -701,7 +731,8 @@ export default function Scene(props) {
     props.save.quality === "low" ||
     (props.save.quality === "auto" &&
       typeof navigator !== "undefined" &&
-      (navigator.hardwareConcurrency || 4) <= 4);
+      ((navigator.hardwareConcurrency || 4) <= 4 ||
+        /Android|iPhone|iPad/i.test(navigator.userAgent)));
   return (
     <SceneError>
       {lost && (
@@ -712,7 +743,9 @@ export default function Scene(props) {
       )}
       <Canvas
         frameloop={
-          ["shop", "settings", "select"].includes(props.screen)
+          ["shop", "settings", "select", "online", "leaderboard"].includes(
+            props.screen,
+          )
             ? "demand"
             : "always"
         }
@@ -720,7 +753,7 @@ export default function Scene(props) {
         dpr={[1, low ? 1.2 : 1.7]}
         camera={{ position: [0, 2.85, 10.8], fov: 49, near: 0.1, far: 80 }}
         gl={{
-          antialias: !low,
+          antialias: true,
           alpha: false,
           powerPreference: "high-performance",
         }}

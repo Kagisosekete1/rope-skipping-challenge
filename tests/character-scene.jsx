@@ -180,3 +180,23 @@ test("computer turns use BeatBot, while human turns keep the crew characters", a
     await r.unmount();
   }
 });
+
+test("a player approaching victory has a larger happy smile", async () => {
+  const engine = {
+    current: { jumpAge: 9, current: 0, progress: [85, 0], phase: 0 },
+  };
+  const r = await ReactThreeTestRenderer.create(
+    <Character
+      kind={0}
+      look={defaultSave().looks[0]}
+      action="play"
+      engine={engine}
+    />,
+  );
+  await r.advanceFrames(2, 1 / 60);
+  assert.ok(
+    r.scene.findAll((n) => n.instance?.name === "emotion-mouth")[0].instance
+      .scale.y > 1,
+  );
+  await r.unmount();
+});

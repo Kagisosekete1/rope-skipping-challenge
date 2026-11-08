@@ -95,19 +95,18 @@ function Eye({ x, blink, skin }) {
       position={[x, 1.91, 0.287]}
       rotation={[0, x > 0 ? 0.12 : -0.12, x > 0 ? -0.05 : 0.05]}
     >
-      <Orb at={[0, 0, -0.018]} scale={[0.12, 0.149, 0.048]} color="#452318" />
+      <Orb at={[0, 0, -0.018]} scale={[0.12, 0.149, 0.048]} color="#98593c" />
       <group ref={blink}>
         <Orb scale={[0.108, 0.133, 0.064]} color="#fff8eb" roughness={0.17} />
         <Orb
           at={[x > 0 ? -0.01 : 0.01, -0.002, 0.054]}
-          scale={[0.067, 0.083, 0.025]}
+          scale={[0.075, 0.09, 0.025]}
           color="#6d3315"
           roughness={0.16}
         />
-        <Ring at={[0, 0, 0.077]} radius={0.058} tube={0.006} color="#b67530" />
         <Orb
           at={[0, 0, 0.078]}
-          scale={[0.039, 0.058, 0.012]}
+          scale={[0.048, 0.062, 0.012]}
           color="#130c12"
           roughness={0.07}
         />
@@ -130,7 +129,7 @@ function Eye({ x, blink, skin }) {
           [0.102, 0.071, 0.009],
         ]}
         radius={0.012}
-        color="#321413"
+        color="#603321"
       />
       <Orb at={[0, 0.03, -0.032]} scale={[0.108, 0.09, 0.012]} color={skin} />
     </group>
@@ -504,7 +503,8 @@ export function Character({
     rightLeg = useRef(),
     hair = useRef(),
     eyeL = useRef(),
-    eyeR = useRef();
+    eyeR = useRef(),
+    mouth = useRef();
   const shirt = ITEMS.outfit[look?.outfit ?? kind]?.color || "#fc278b",
     hairColor =
       ITEMS.hair[look?.hair ?? (kind === 1 ? 1 : 0)]?.color || "#3b1c10",
@@ -542,7 +542,12 @@ export function Character({
       : holderSide
         ? holderSide * 0.28
         : Math.sin(t * 0.8) * 0.06;
-    head.current.rotation.x = win ? -0.1 : Math.sin(t * 1.3) * 0.018;
+    const excited =
+      !holderSide && playing && (match?.progress?.[match.current] || 0) >= 75;
+    head.current.rotation.x =
+      win || excited ? -0.07 : Math.sin(t * 1.3) * 0.018;
+    head.current.rotation.z = excited ? Math.sin(t * 3) * 0.035 : 0;
+    if (mouth.current) mouth.current.scale.y = win || excited ? 1.18 : 1;
     const blink = t % 4.3;
     const lid =
       blink < 0.14 ? Math.max(0.07, Math.abs(blink - 0.07) / 0.07) : 1;
@@ -754,21 +759,23 @@ export function Character({
               scale={[0.011, 0.007, 0.007]}
               color="#8a462b"
             />
-            <Orb
-              at={[0, 1.711, 0.282]}
-              scale={[0.104, 0.066, 0.022]}
-              color="#6c1e2b"
-            />
-            <Orb
-              at={[0, 1.741, 0.302]}
-              scale={[0.083, 0.021, 0.009]}
-              color="#fff9ee"
-            />
-            <Orb
-              at={[0, 1.68, 0.302]}
-              scale={[0.052, 0.014, 0.008]}
-              color="#ec7985"
-            />
+            <group
+              ref={mouth}
+              name="emotion-mouth"
+              position={[0, 1.715, 0.285]}
+            >
+              <Orb scale={[0.105, 0.055, 0.021]} color="#883e40" />
+              <Orb
+                at={[0, 0.024, 0.022]}
+                scale={[0.079, 0.012, 0.008]}
+                color="#fff9ed"
+              />
+              <Orb
+                at={[0, -0.027, 0.023]}
+                scale={[0.044, 0.011, 0.007]}
+                color="#ef9b9f"
+              />
+            </group>
             <Hair
               kind={kind}
               color={hairColor}

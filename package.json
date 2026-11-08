@@ -1,6 +1,6 @@
 {
   "name": "rope-skipping-challenge",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,9 +9,12 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/*.test.js",
     "test:scene": "node scripts/test-scene.mjs",
-    "test:ui": "node scripts/test-ui.mjs && node scripts/test-ui.mjs account"
+    "test:ui": "node scripts/test-ui.mjs && node scripts/test-ui.mjs account && node scripts/test-ui.mjs online",
+    "android:build": "node scripts/build-android.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/core": "^7.6.10",
     "@react-three/drei": "^10.7.0",
     "@react-three/fiber": "^9.3.0",
     "@supabase/supabase-js": "^2.119.0",
@@ -21,6 +24,7 @@
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.10",
     "@electric-sql/pglite": "^0.5.15",
     "@react-three/test-renderer": "^9.1.1",
     "esbuild": "^0.28.2",

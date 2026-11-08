@@ -44,6 +44,8 @@ export const ITEMS = {
 export function defaultSave() {
   return {
     profile: localProfile(),
+    points: 1000,
+    freezes: 0,
     coins: 2450,
     xp: 0,
     wins: 0,
@@ -107,6 +109,12 @@ export class Match {
     this.difficulty = difficulty;
     this.current = 0;
     this.progress = [0, 0];
+    this.powers = [
+      { block: 1, shield: 1, slow: 1, boost: 1 },
+      { block: 1, shield: 1, slow: 1, boost: 1 },
+    ];
+    this.effects = [{}, {}];
+    this.frozenUntil = [0, 0];
     this.phase = 0;
     this.readyStartPhase = 0;
     this.readyTargetPhase = Math.PI;
@@ -144,13 +152,19 @@ export class Match {
       winner: this.winner,
       feedback: this.feedback,
       result: this.result,
+      powers: this.powers.map((p) => ({ ...p })),
+      effects: this.effects.map((e) => ({ ...e })),
+      frozen: this.frozenUntil.map((t) => t > this.time),
     };
   }
   get ai() {
     return this.mode === "cpu" && this.current === 1;
   }
   get period() {
-    return Math.max(1.05, 1.9 - this.done * 0.09);
+    return (
+      Math.max(1.05, 1.9 - this.done * 0.09) *
+      (this.effects[this.current].slow ? 1.35 : 1)
+    );
   }
   roll() {
     if (this.state !== "idle" || this.paused) return false;
@@ -163,9 +177,58 @@ export class Match {
     return true;
   }
   jump() {
-    if (this.state !== "skipping" || this.paused || this.jumpAge < 0.82)
+    if (
+      this.state !== "skipping" ||
+      this.paused ||
+      this.jumpAge < 0.82 ||
+      this.frozenUntil[this.current] > this.time
+    )
       return false;
     this.jumpAge = 0;
+    return true;
+  }
+  canPower(name, actor = 0) {
+    if (
+      !["idle", "rolling", "ready", "skipping"].includes(this.state) ||
+      this.paused
+    )
+      return false;
+    if (name === "freeze")
+      return (
+        this.current !== actor &&
+        this.state === "skipping" &&
+        this.frozenUntil[this.current] <= this.time
+      );
+    if (!this.powers[actor]?.[name]) return false;
+    return name === "block" || this.current === actor;
+  }
+  usePower(name, actor = 0, paid = false) {
+    if (!this.canPower(name, actor)) return false;
+    if (name === "freeze") {
+      if (!paid) return false;
+      const target = 1 - actor;
+      if (this.effects[target].block) {
+        this.effects[target].block = false;
+        this.feedback = "Freeze blocked!";
+      } else {
+        this.frozenUntil[target] = this.time + 1.5;
+        this.jumpAge = 9;
+        this.feedback =
+          (target === 1 && this.mode === "cpu"
+            ? "BeatBot"
+            : "Player " + (target + 1)) + " is frozen!";
+      }
+    } else {
+      this.powers[actor][name]--;
+      this.effects[actor][name] = true;
+      this.feedback = {
+        block: "Block ready — counters the next Freeze",
+        shield: "Shield ready — one rope hit protected",
+        slow: "Slow rope activated",
+        boost: "Boost ready — next jump scores double",
+      }[name];
+    }
+    this.emit();
     return true;
   }
   pause() {
@@ -177,6 +240,11 @@ export class Match {
     if (this.paused || this.state === "over") return;
     dt = Math.min(dt, 0.05);
     this.time += dt;
+    for (let i = 0; i < 2; i++)
+      if (this.frozenUntil[i] && this.frozenUntil[i] <= this.time) {
+        this.frozenUntil[i] = 0;
+        this.emit();
+      }
     this.elapsed += dt;
     this.jumpAge += dt;
     if (this.state === "idle") {
@@ -216,6 +284,7 @@ export class Match {
       this.current = 1 - this.current;
       if (this.current === 0) this.round++;
       this.state = "idle";
+      this.effects[this.current].slow = false;
       this.elapsed = 0;
       this.feedback = this.ai ? "BeatBot’s turn" : "Your turn — roll the dice!";
       this.emit();
@@ -238,11 +307,21 @@ export class Match {
         this.done++;
         this.combo++;
         this.best = Math.max(this.best, this.combo);
-        this.progress[this.current] = scoreJump(
-          this.progress[this.current],
-          perfect,
+        const beforeScore = this.progress[this.current],
+          boost = this.effects[this.current].boost;
+        const base = scoreJump(0, perfect);
+        this.progress[this.current] = Math.min(
+          100,
+          beforeScore + base * (boost ? 2 : 1),
         );
-        this.feedback = perfect ? "PERFECT! +7%" : "Nice jump! +5%";
+        this.effects[this.current].boost = false;
+        this.feedback = boost
+          ? perfect
+            ? "BOOST PERFECT! +14%"
+            : "BOOST! +10%"
+          : perfect
+            ? "PERFECT! +7%"
+            : "Nice jump! +5%";
         this.result = perfect ? "perfect" : "good";
         if (this.progress[this.current] >= 100) {
           this.finish();
@@ -264,6 +343,14 @@ export class Match {
         this.aiPlan();
         this.emit();
       } else {
+        if (this.effects[this.current].shield) {
+          this.effects[this.current].shield = false;
+          this.feedback = "Shield saved you! Keep jumping";
+          this.result = "shield";
+          this.aiPlan();
+          this.emit();
+          return;
+        }
         this.combo = 0;
         this.state = "turnEnd";
         this.elapsed = 0;

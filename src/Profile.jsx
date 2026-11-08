@@ -1,3 +1,5 @@
+import { COUNTRIES } from "./countries";
+import { preparePhoto } from "./photos";
 import React, { useEffect, useState } from "react";
 import { supabase as configuredClient } from "./supabase";
 import {
@@ -55,7 +57,9 @@ export default function Profile({
     let active = true;
     client
       .from("profiles")
-      .select("display_name,avatar")
+      .select(
+        "display_name,avatar,username,country_code,photo_path,leaderboard_visible",
+      )
       .eq("id", session.user.id)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -67,7 +71,14 @@ export default function Profile({
           return;
         }
         if (data) {
-          const value = { displayName: data.display_name, avatar: data.avatar };
+          const value = localProfile({
+            displayName: data.display_name,
+            avatar: data.avatar,
+            username: data.username,
+            countryCode: data.country_code,
+            photoPath: data.photo_path,
+            leaderboardVisible: data.leaderboard_visible,
+          });
           setDraft(value);
           onSave(value);
         }
@@ -125,21 +136,27 @@ export default function Profile({
       setStatus("Choose a name with 2–24 characters and a crew avatar.");
       return;
     }
+    if (session && !/^[a-zA-Z0-9_]{3,24}$/.test(value.username)) {
+      setStatus("Choose a username with 3–24 letters, numbers or underscores.");
+      return;
+    }
     if (busy) return;
     setBusy(true);
     setStatus("");
     try {
       if (client && session?.user) {
-        const { error } = await client
-          .from("profiles")
-          .upsert(
-            {
-              id: session.user.id,
-              display_name: value.displayName,
-              avatar: value.avatar,
-            },
-            { onConflict: "id" },
-          );
+        const { error } = await client.from("profiles").upsert(
+          {
+            id: session.user.id,
+            display_name: value.displayName,
+            avatar: value.avatar,
+            username: value.username,
+            country_code: value.countryCode,
+            photo_path: value.photoPath,
+            leaderboard_visible: value.leaderboardVisible,
+          },
+          { onConflict: "id" },
+        );
         if (error) {
           setStatus(
             "Your online profile could not be saved. Please try again.",
@@ -147,6 +164,13 @@ export default function Profile({
           return;
         }
       }
+      if (
+        session &&
+        profile.photoPath &&
+        profile.photoPath !== value.photoPath &&
+        profile.photoPath.startsWith(session.user.id + "/")
+      )
+        await client.storage.from("player-avatars").remove([profile.photoPath]);
       onSave(value);
       onNotify(
         session
@@ -155,6 +179,40 @@ export default function Profile({
       );
     } catch {
       setStatus("Could not save your profile. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function upload(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!session) {
+      setStatus("Sign in to upload a public profile photo.");
+      return;
+    }
+    setBusy(true);
+    setStatus("");
+    try {
+      const blob = await preparePhoto(file),
+        extension =
+          blob.type === "image/png"
+            ? "png"
+            : blob.type === "image/jpeg"
+              ? "jpg"
+              : "webp";
+      const path =
+        session.user.id + "/" + crypto.randomUUID() + "." + extension;
+      const { error } = await client.storage
+        .from("player-avatars")
+        .upload(path, blob, { contentType: blob.type, upsert: false });
+      if (error) throw error;
+      setDraft((d) => ({ ...d, photoPath: path }));
+      setStatus(
+        "Photo uploaded. Save your profile to publish it on the leaderboard.",
+      );
+    } catch (e) {
+      setStatus(e.message || "Photo upload failed.");
     } finally {
       setBusy(false);
     }
@@ -197,6 +255,86 @@ export default function Profile({
             setDraft((d) => ({ ...d, displayName: e.target.value }))
           }
         />
+        <label htmlFor="username">Public username</label>
+        <input
+          id="username"
+          name="username"
+          minLength={3}
+          maxLength={24}
+          pattern="[a-zA-Z0-9_]{3,24}"
+          required={!!session}
+          value={draft.username}
+          onChange={(e) =>
+            setDraft((d) => ({ ...d, username: e.target.value }))
+          }
+          placeholder="your_name"
+          autoComplete="username"
+        />
+        <label htmlFor="country">Country</label>
+        <select
+          id="country"
+          value={draft.countryCode}
+          onChange={(e) =>
+            setDraft((d) => ({ ...d, countryCode: e.target.value }))
+          }
+        >
+          <option value="">Choose your country</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <div className="profile-photo-controls">
+          {draft.photoPath && client ? (
+            <img
+              className="profile-gallery-photo"
+              src={
+                client.storage
+                  .from("player-avatars")
+                  .getPublicUrl(draft.photoPath).data.publicUrl
+              }
+              alt="Your chosen public profile photo"
+            />
+          ) : (
+            <span className="profile-photo-placeholder">
+              {draft.displayName.slice(0, 1)}
+            </span>
+          )}
+          <div>
+            <label className="button blue photo-picker">
+              CHOOSE GALLERY PHOTO
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={busy || !session}
+                onChange={upload}
+              />
+            </label>
+            {draft.photoPath && (
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => setDraft((d) => ({ ...d, photoPath: null }))}
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
+        </div>
+        <label className="public-profile-choice">
+          <input
+            type="checkbox"
+            checked={draft.leaderboardVisible}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, leaderboardVisible: e.target.checked }))
+            }
+          />{" "}
+          Show my username, photo, country and points on the public leaderboard
+        </label>
+        <p className="community-note">
+          Uploaded photos are public. Email addresses are never shown.
+        </p>
         <span className="field-label">Choose your crew avatar</span>
         <div className="profile-avatars">
           {AVATARS.map((avatar, i) => (

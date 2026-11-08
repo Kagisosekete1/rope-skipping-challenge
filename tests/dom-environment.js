@@ -7,6 +7,8 @@ Object.assign(globalThis, {
   window: dom.window,
   document: dom.window.document,
   localStorage: dom.window.localStorage,
+  sessionStorage: dom.window.sessionStorage,
+  location: dom.window.location,
   getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
   requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
   cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),

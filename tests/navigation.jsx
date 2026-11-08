@@ -69,6 +69,10 @@ test("navigation survives splash removal; real controls, purchases and saves kee
     );
     await click(button("Roll the dice"));
     assert.equal(globalThis.uiTestEngine.state, "rolling");
+    assert.ok(
+      document.querySelector(".dice-showcase"),
+      "rolling has a dedicated visible 3D dice viewport",
+    );
     await act(async () => {
       for (let i = 0; i < 330; i++) globalThis.uiTestEngine.tick(0.01);
     });

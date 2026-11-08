@@ -61,14 +61,24 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
       assert.equal(table, "profiles");
       return {
         select(columns) {
-          assert.equal(columns, "display_name,avatar");
+          assert.equal(
+            columns,
+            "display_name,avatar,username,country_code,photo_path,leaderboard_visible",
+          );
           return {
             eq(field, id) {
               assert.equal(field, "id");
               assert.equal(id, user.id);
               return {
                 maybeSingle: async () => ({
-                  data: { display_name: "Rope Star", avatar: "pink" },
+                  data: {
+                    display_name: "Rope Star",
+                    avatar: "pink",
+                    username: "rope_star",
+                    country_code: "ZA",
+                    photo_path: null,
+                    leaderboard_visible: true,
+                  },
                   error: null,
                 }),
               };
@@ -124,6 +134,10 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
       id: user.id,
       display_name: "New Player",
       avatar: "yellow",
+      username: "rope_star",
+      country_code: "ZA",
+      photo_path: null,
+      leaderboard_visible: true,
     });
     assert.equal(requests[0].options.onConflict, "id");
     assert.match(messages.at(-1), /saved to your account/);

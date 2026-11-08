@@ -1,0 +1,14 @@
+{
+  "appId": "com.seketefilms.ropeskipping",
+  "appName": "Rope Skipping Challenge",
+  "webDir": "native-shell",
+  "server": {
+    "url": "https://rope-skipping-challenge-kagiso.seketefilmstv.chatgpt.site",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#057cf2",
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
+}

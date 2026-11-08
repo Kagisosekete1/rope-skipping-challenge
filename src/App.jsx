@@ -6,8 +6,12 @@ import Scene from "./Scene";
 import { Character, Outfit, Shoe } from "./Character";
 import { Robot } from "./Robot";
 import Profile from "./Profile";
+import { useAccount } from "./useAccount";
+import { Leaderboard, OnlineLobby } from "./Community";
+import { OnlineMatch } from "./online";
+import { Dice } from "./Scene";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
-import { tone, music, unlockMusic } from "./audio";
+import { tone, music, unlockMusic, playVictory, stopVictory } from "./audio";
 function Icon({ name, size = 26 }) {
   const paths = {
     back: "m15 5-7 7 7 7",
@@ -158,6 +162,9 @@ function ViewClear() {
   return null;
 }
 export default function App({ splashDelay = 1800 }) {
+  const account = useAccount();
+  const [toolActor, setToolActor] = useState(0),
+    [buyingFreeze, setBuyingFreeze] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), splashDelay);
@@ -165,11 +172,16 @@ export default function App({ splashDelay = 1800 }) {
   }, [splashDelay]);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [save, setSave] = useState(() => loadSave(localStorage)),
-    [screen, setScreen] = useState(() =>
-      new URLSearchParams(window.location.search).has("profile")
+    [screen, setScreen] = useState(() => {
+      const p = new URLSearchParams(window.location.search);
+      return p.has("profile")
         ? "profile"
-        : "welcome",
-    ),
+        : p.has("challenge") || p.get("page") === "online"
+          ? "online"
+          : p.get("page") === "leaderboard"
+            ? "leaderboard"
+            : "welcome";
+    }),
     [match, setMatch] = useState(null),
     [mode, setMode] = useState("cpu"),
     [difficulty, setDifficulty] = useState("Normal"),
@@ -187,6 +199,18 @@ export default function App({ splashDelay = 1800 }) {
     toastTimer = useRef(),
     lastState = useRef("idle"),
     lastDone = useRef(0);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const fit = () =>
+      root.current?.style.setProperty("--app-height", viewport.height + "px");
+    fit();
+    viewport.addEventListener("resize", fit);
+    return () => viewport.removeEventListener("resize", fit);
+  }, []);
+  useEffect(() => {
+    if (account.profile) setSave((s) => ({ ...s, profile: account.profile }));
+  }, [account.profile]);
   const notify = (message) => {
     setToast(message);
     clearTimeout(toastTimer.current);
@@ -215,9 +239,13 @@ export default function App({ splashDelay = 1800 }) {
     screenRef.current = screen;
   }, [screen]);
   useEffect(() => {
-    music(save.music && !document.hidden);
+    music(
+      save.music &&
+        !document.hidden &&
+        !(screen === "rewards" && (reward?.won || reward?.mode === "pvp")),
+    );
     return () => music(false);
-  }, [save.music]);
+  }, [save.music, screen === "rewards", reward?.won]);
   useEffect(() => {
     if (!match) return;
     const sound = saveRef.current.sound;
@@ -231,10 +259,25 @@ export default function App({ splashDelay = 1800 }) {
     lastState.current = match.state;
     if (match.state === "over" && !rewarded.current) {
       rewarded.current = true;
-      const won = match.winner === 0,
-        coins = match.mode === "pvp" ? 200 : won ? 250 : 80,
-        xp = won ? 50 : 20;
-      setReward({ coins, xp, won, mode: match.mode, best: match.best });
+      const won = match.winner === (match.mode === "online" ? match.mySlot : 0),
+        coins =
+          match.mode === "online"
+            ? 0
+            : match.mode === "pvp"
+              ? 200
+              : won
+                ? 250
+                : 80,
+        xp = match.mode === "online" ? 0 : won ? 50 : 20;
+      setReward({
+        coins,
+        xp,
+        won,
+        mode: match.mode,
+        best: match.best,
+        points: match.mode === "online" && won ? match.stake * 2 : 0,
+        net: match.mode === "online" ? (won ? match.stake : -match.stake) : 0,
+      });
       setSave((s) => ({
         ...s,
         coins: s.coins + coins,
@@ -243,7 +286,11 @@ export default function App({ splashDelay = 1800 }) {
         matches: s.matches + 1,
         best: Math.max(s.best, match.best),
       }));
-      tone("win", sound);
+      if (won || match.mode === "pvp") playVictory(sound);
+      if (match.mode === "online") {
+        engine.current.close();
+        account.reload();
+      }
       setScreen("rewards");
     }
   }, [match]);
@@ -271,7 +318,11 @@ export default function App({ splashDelay = 1800 }) {
       }
     };
     const hide = () => {
-      music(saveRef.current.music && !document.hidden);
+      music(
+        saveRef.current.music &&
+          !document.hidden &&
+          screenRef.current !== "rewards",
+      );
       if (
         document.hidden &&
         screenRef.current === "gameplay" &&
@@ -299,14 +350,124 @@ export default function App({ splashDelay = 1800 }) {
     }
   }, [screen]);
   function go(s) {
+    stopVictory();
+    if (engine.current.mode === "online" && engine.current.state === "over")
+      engine.current.close();
+    if (["online", "leaderboard"].includes(s)) account.reload();
     tone("click", save.sound);
     setModal(null);
     setScreen(s);
   }
   function start() {
+    stopVictory();
+    if (engine.current.mode === "online") {
+      engine.current.close();
+      engine.current = new Match(setMatch);
+    }
     rewarded.current = false;
     engine.current.reset(mode, difficulty);
     setScreen("gameplay");
+  }
+  function startOnline(data) {
+    stopVictory();
+    engine.current.close?.();
+    rewarded.current = false;
+    engine.current = new OnlineMatch(
+      data,
+      account.client,
+      setMatch,
+      account.setWallet,
+      notify,
+    ).connect();
+    setMatch(engine.current.snapshot());
+    setScreen("gameplay");
+  }
+  async function leaveMatch() {
+    if (engine.current.mode === "online") {
+      await engine.current.forfeit();
+      engine.current.close();
+    }
+    go("home");
+  }
+  async function buyFreeze() {
+    if (buyingFreeze) return;
+    setBuyingFreeze(true);
+    try {
+      if (account.user) {
+        const { data, error } = await account.client.rpc("buy_freeze", {
+          p_request_id: crypto.randomUUID(),
+        });
+        if (error) throw error;
+        account.setWallet(data);
+      } else {
+        if (save.points < 50) {
+          notify("You need 50 practice points.");
+          return;
+        }
+        setSave((s) => ({
+          ...s,
+          points: s.points - 50,
+          freezes: s.freezes + 1,
+        }));
+      }
+      notify("Freeze purchased!");
+    } catch (e) {
+      notify(e.message || "Could not buy Freeze");
+    } finally {
+      setBuyingFreeze(false);
+    }
+  }
+  async function power(name) {
+    const actor =
+      engine.current.mode === "online"
+        ? engine.current.mySlot
+        : current.mode === "pvp"
+          ? toolActor
+          : 0;
+    if (!engine.current.canPower(name, actor)) return;
+    if (engine.current.mode === "online") {
+      await engine.current.usePower(name);
+      return;
+    }
+    try {
+      if (name === "freeze") {
+        if (account.user) {
+          const { data, error } = await account.client.rpc(
+            "consume_practice_freeze",
+            { p_request_id: crypto.randomUUID() },
+          );
+          if (error) throw error;
+          account.setWallet(data);
+        } else {
+          if (save.freezes < 1) {
+            notify("Buy Freeze for 50 points first.");
+            return;
+          }
+          setSave((s) => ({ ...s, freezes: s.freezes - 1 }));
+        }
+      }
+      engine.current.usePower(name, actor, name === "freeze");
+      tone("perfect", save.sound);
+    } catch (e) {
+      notify(e.message || "Power-up unavailable");
+    }
+  }
+  async function shareApp(apk = false) {
+    const url =
+      window.location.origin +
+      window.location.pathname +
+      (apk ? "downloads/Rope-Skipping-Challenge-test.apk" : "");
+    try {
+      if (navigator.share)
+        await navigator.share({ title: "Rope Skipping Challenge", url });
+      else {
+        await navigator.clipboard.writeText(url);
+        notify("Link copied!");
+      }
+    } catch (e) {
+      if (e.name !== "AbortError")
+        notify("Copy the game address from your browser to share it.");
+    }
   }
   function jump() {
     if (!engine.current.ai && engine.current.jump()) tone("jump", save.sound);
@@ -383,6 +544,7 @@ export default function App({ splashDelay = 1800 }) {
         ["home", "Home"],
         ["shop", "Shop"],
         ["rewards", "Rewards"],
+        ["leaderboard", "Ranks"],
         ["settings", "Settings"],
       ].map(([s, label]) => (
         <button
@@ -390,14 +552,20 @@ export default function App({ splashDelay = 1800 }) {
           onClick={() => go(s)}
           className={screen === s ? "active" : ""}
         >
-          <Icon name={s === "rewards" ? "trophy" : s} size={34} />
+          <Icon
+            name={["rewards", "leaderboard"].includes(s) ? "trophy" : s}
+            size={34}
+          />
           <span>{label}</span>
         </button>
       ))}
     </nav>
   );
   return (
-    <div ref={root} className={`app screen-${screen}`}>
+    <div
+      ref={root}
+      className={`app screen-${screen} ${screen === "gameplay" && ["rolling", "ready"].includes(current.state) ? "showing-die" : ""}`}
+    >
       <div className="world">
         <Scene
           screen={screen}
@@ -409,7 +577,9 @@ export default function App({ splashDelay = 1800 }) {
         />
       </div>
       <div className="vignette" />
-      {["shop", "select"].includes(screen) && (
+      {(["shop", "select"].includes(screen) ||
+        (screen === "gameplay" &&
+          ["rolling", "ready"].includes(current.state))) && (
         <div className="shop-render">
           <Canvas
             eventSource={root}
@@ -421,6 +591,20 @@ export default function App({ splashDelay = 1800 }) {
           </Canvas>
         </div>
       )}
+      {screen === "gameplay" &&
+        ["rolling", "ready"].includes(current.state) && (
+          <View className="dice-showcase" index={1}>
+            <PerspectiveCamera makeDefault position={[0, 0, 3.6]} fov={40} />
+            <ambientLight intensity={1.7} />
+            <directionalLight position={[-3, 4, 5]} intensity={3.2} />
+            <Dice
+              position={[0, 0, 0]}
+              value={current.needed || 1}
+              rolling={current.state === "rolling"}
+              scale={1.2}
+            />
+          </View>
+        )}
       {screen === "welcome" && (
         <main
           className="welcome screen-enter"
@@ -473,6 +657,12 @@ export default function App({ splashDelay = 1800 }) {
             <p>A little rhythm. A whole lot of joy.</p>
           </div>
           <section className="home-actions">
+            <button
+              className="online-home button blue"
+              onClick={() => go("online")}
+            >
+              INVITE A FRIEND · POINTS MATCH
+            </button>
             <Button className="play-big" onClick={() => go("select")}>
               LET’S PLAY <Icon name="play" size={32} />
             </Button>
@@ -560,6 +750,23 @@ export default function App({ splashDelay = 1800 }) {
           </div>
         </main>
       )}
+      {screen === "leaderboard" && (
+        <main className="page community screen-enter">
+          {header("GLOBAL", "LEADERBOARD")}
+          <Leaderboard />
+        </main>
+      )}
+      {screen === "online" && (
+        <main className="page community screen-enter">
+          {header("FRIEND", "CHALLENGE")}
+          <OnlineLobby
+            account={account}
+            onStart={startOnline}
+            onProfile={() => go("profile")}
+            onNotify={notify}
+          />
+        </main>
+      )}
       {screen === "gameplay" && (
         <main className="gameplay screen-enter">
           <header className="match-hud">
@@ -571,11 +778,13 @@ export default function App({ splashDelay = 1800 }) {
                 key={i}
               >
                 <div className="player-name">
-                  {i === 0
-                    ? save.profile.displayName
-                    : current.mode === "cpu"
-                      ? "BeatBot"
-                      : "Player 2"}
+                  {current.mode === "online"
+                    ? current.names?.[i] || "Player"
+                    : i === 0
+                      ? save.profile.displayName
+                      : current.mode === "cpu"
+                        ? "BeatBot"
+                        : "Player 2"}
                 </div>
                 <div className="progress">
                   <i style={{ width: current.progress[i] + "%" }} />
@@ -610,6 +819,80 @@ export default function App({ splashDelay = 1800 }) {
           >
             {current.feedback}
           </div>
+          <div className="powerup-bar">
+            {current.mode === "pvp" && (
+              <div className="tool-actor">
+                <button
+                  onClick={() => setToolActor(0)}
+                  className={toolActor === 0 ? "active" : ""}
+                >
+                  P1 tools
+                </button>
+                <button
+                  onClick={() => setToolActor(1)}
+                  className={toolActor === 1 ? "active" : ""}
+                >
+                  P2 tools
+                </button>
+              </div>
+            )}
+            {["block", "shield", "slow", "boost", "freeze"].map((name) => (
+              <button
+                key={name}
+                className={"power-" + name}
+                disabled={
+                  !engine.current.canPower?.(
+                    name,
+                    current.mode === "online"
+                      ? current.mySlot
+                      : current.mode === "pvp"
+                        ? toolActor
+                        : 0,
+                  )
+                }
+                onClick={() => power(name)}
+              >
+                <span>
+                  {
+                    {
+                      block: "✋",
+                      shield: "🛡",
+                      slow: "🐢",
+                      boost: "⚡",
+                      freeze: "❄",
+                    }[name]
+                  }
+                </span>
+                {name.toUpperCase()}
+                <small>
+                  {name === "freeze"
+                    ? account.user
+                      ? account.wallet?.freeze_tokens || 0
+                      : save.freezes || 0
+                    : (current.powers?.[
+                        current.mode === "online"
+                          ? current.mySlot
+                          : current.mode === "pvp"
+                            ? toolActor
+                            : 0
+                      ]?.[name] ?? 1)}
+                </small>
+              </button>
+            ))}
+            <button
+              className="buy-freeze"
+              disabled={buyingFreeze}
+              onClick={buyFreeze}
+            >
+              BUY ❄<small>50 POINTS</small>
+            </button>
+            <span className="power-points">
+              {account.user
+                ? Number(account.wallet?.points || 0)
+                : save.points || 0}{" "}
+              pts
+            </span>
+          </div>
           <div className="game-controls">
             <div className="jump-count glass">
               <Icon name="jump" size={36} />
@@ -631,7 +914,11 @@ export default function App({ splashDelay = 1800 }) {
                 <Button
                   variant="blue"
                   onClick={roll}
-                  disabled={current.state !== "idle" || engine.current.ai}
+                  disabled={
+                    current.state !== "idle" ||
+                    engine.current.ai ||
+                    engine.current.isSpectating
+                  }
                   className="roll-button"
                 >
                   {current.state === "idle"
@@ -651,7 +938,12 @@ export default function App({ splashDelay = 1800 }) {
               variant="green"
               className="jump-button"
               onClick={jump}
-              disabled={current.state !== "skipping" || engine.current.ai}
+              disabled={
+                current.state !== "skipping" ||
+                engine.current.ai ||
+                engine.current.isSpectating ||
+                current.frozen?.[current.current]
+              }
             >
               <Icon name="jump" size={46} /> JUMP
             </Button>
@@ -663,7 +955,11 @@ export default function App({ splashDelay = 1800 }) {
             <div className="modal-backdrop">
               <section className="modal glass">
                 <h2>Take a breather</h2>
-                <p>Your playground will be right here.</p>
+                <p>
+                  {current.mode === "online"
+                    ? "The online clock keeps running. Leaving forfeits your stake."
+                    : "Your playground will be right here."}
+                </p>
                 <Button onClick={() => engine.current.pause()}>
                   RESUME <Icon name="play" />
                 </Button>
@@ -677,8 +973,12 @@ export default function App({ splashDelay = 1800 }) {
                 </Button>
                 {modal === "quit" && (
                   <div className="confirm">
-                    <p>Leave this match? Unfinished matches earn no rewards.</p>
-                    <Button onClick={() => go("home")}>Leave match</Button>
+                    <p>
+                      {current.mode === "online"
+                        ? "Leaving forfeits this points match to your opponent."
+                        : "Leave this match? Unfinished matches earn no rewards."}
+                    </p>
+                    <Button onClick={leaveMatch}>Leave match</Button>
                     <button
                       className="text-button"
                       onClick={() => setModal(null)}
@@ -880,12 +1180,21 @@ export default function App({ splashDelay = 1800 }) {
             <section className="reward-panel glass">
               <div className="reward-line">
                 <Coin />
-                <strong>+ {reward.coins}</strong>
+                <strong>
+                  + {reward.mode === "online" ? reward.points : reward.coins}
+                  {reward.mode === "online" ? " POINTS" : ""}
+                </strong>
               </div>
               <div className="reward-line">
                 <Icon name="star" size={40} />
                 <strong>
-                  + {reward.xp} <em>XP</em>
+                  {reward.mode === "online" ? (
+                    (reward.net >= 0 ? "+" : "") + reward.net + " NET POINTS"
+                  ) : (
+                    <>
+                      + {reward.xp} <em>XP</em>
+                    </>
+                  )}
                 </strong>
               </div>
               <div className="reward-summary">
@@ -1002,6 +1311,14 @@ export default function App({ splashDelay = 1800 }) {
               variant="blue"
               className="install-button"
               onClick={async () => {
+                if (
+                  window.Capacitor?.isNativePlatform?.() ||
+                  window.matchMedia?.("(display-mode: standalone)").matches ||
+                  navigator.standalone
+                ) {
+                  notify("The app is already installed.");
+                  return;
+                }
                 if (installPrompt) {
                   await installPrompt.prompt();
                   setInstallPrompt(null);
@@ -1015,6 +1332,25 @@ export default function App({ splashDelay = 1800 }) {
             >
               Install on your phone
             </Button>
+            <div className="install-share">
+              <button className="button blue" onClick={() => shareApp(false)}>
+                SHARE GAME LINK
+              </button>
+              <a
+                className="button gold"
+                href="./downloads/Rope-Skipping-Challenge-test.apk"
+                download="Rope-Skipping-Challenge-test.apk"
+              >
+                DOWNLOAD ANDROID APK
+              </a>
+              <button className="text-button" onClick={() => shareApp(true)}>
+                Share APK download link
+              </button>
+              <p className="save-note">
+                Android test build · Opens this live game · Internet needed. You
+                can also install the PWA from your browser.
+              </p>
+            </div>
             <button
               className="text-button danger"
               onClick={() => setModal("reset")}

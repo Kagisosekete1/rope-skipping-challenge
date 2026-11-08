@@ -1,4 +1,4 @@
-import { createPlaylist } from "./music";
+import { createPlaylist } from "./music.js";
 let ctx, playlist;
 export function tone(type, enabled = true) {
   if (!enabled) return;
@@ -38,4 +38,53 @@ export function music(on) {
 }
 export function unlockMusic() {
   playlist?.unlock();
+  warmCheer();
+}
+
+let cheerBuffer,
+  cheerLoading,
+  cheerSource,
+  victoryRequested = false;
+function warmCheer() {
+  if (cheerBuffer) return Promise.resolve(cheerBuffer);
+  const AudioContextCtor =
+    globalThis.AudioContext || globalThis.webkitAudioContext;
+  if (!AudioContextCtor) return Promise.resolve(null);
+  try {
+    ctx ??= new AudioContextCtor();
+  } catch {
+    return Promise.resolve(null);
+  }
+  cheerLoading ??= fetch("./audio/victory-cheer.mp3")
+    .then((r) => {
+      if (!r.ok) throw new Error("Cheer unavailable");
+      return r.arrayBuffer();
+    })
+    .then((b) => ctx.decodeAudioData(b))
+    .then((b) => (cheerBuffer = b))
+    .catch(() => null);
+  return cheerLoading;
+}
+export function playVictory(enabled = true) {
+  music(false);
+  victoryRequested = enabled;
+  if (!enabled) return;
+  const play = (buffer) => {
+    if (!buffer || !victoryRequested) return;
+    ctx.resume()?.catch(() => {});
+    cheerSource?.stop();
+    cheerSource = ctx.createBufferSource();
+    cheerSource.buffer = buffer;
+    cheerSource.connect(ctx.destination);
+    cheerSource.start();
+  };
+  if (cheerBuffer) play(cheerBuffer);
+  else warmCheer().then(play);
+}
+export function stopVictory() {
+  victoryRequested = false;
+  try {
+    cheerSource?.stop();
+  } catch {}
+  cheerSource = null;
 }

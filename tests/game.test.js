@@ -160,3 +160,45 @@ test("rope rests underfoot, winds up continuously and never teleports at a turn 
   assert.equal(m.state, "idle");
   assert.equal(m.phase, resting, "turn handoff must preserve the rope angle");
 });
+
+test("Shield absorbs one miss, Slow changes tempo and Boost doubles a scored jump", () => {
+  const m = new Match(
+    () => {},
+    () => 0.2,
+  );
+  skipping(m, 3);
+  const normal = m.period;
+  assert.equal(m.usePower("slow"), true);
+  assert.ok(m.period > normal);
+  assert.equal(m.usePower("slow"), false);
+  assert.equal(m.usePower("shield"), true);
+  advance(m, 1.5);
+  assert.equal(m.state, "skipping");
+  assert.equal(m.effects[0].shield, false);
+  assert.equal(m.progress[0], 0);
+  assert.equal(m.usePower("boost"), true);
+  land(m);
+  assert.equal(m.progress[0], 14);
+  assert.equal(m.effects[0].boost, false);
+});
+test("paid Freeze can target BeatBot and player two; Block counters it", () => {
+  const m = new Match();
+  m.current = 1;
+  m.state = "skipping";
+  m.phase = Math.PI;
+  assert.equal(m.usePower("freeze", 0), false);
+  assert.equal(m.usePower("block", 1), true);
+  assert.equal(m.usePower("freeze", 0, true), true);
+  assert.equal(m.frozenUntil[1], 0);
+  assert.equal(m.effects[1].block, false);
+  assert.equal(m.usePower("freeze", 0, true), true);
+  assert.equal(m.jump(), false);
+  advance(m, 0.2);
+  assert.equal(m.jump(), false);
+  const p = new Match();
+  p.reset("pvp");
+  p.current = 1;
+  p.state = "skipping";
+  assert.equal(p.usePower("freeze", 0, true), true);
+  assert.equal(p.frozenUntil[1], 1.5);
+});

@@ -4,3 +4,5 @@ export default function Scene({ screen, engine }) {
   globalThis.uiTestEngine = engine.current;
   return <div data-testid="scene" data-screen={screen} />;
 }
+
+export function Dice(){return null;}

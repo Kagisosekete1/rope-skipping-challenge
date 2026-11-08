@@ -5,3 +5,8 @@ dist/
 .test-tmp/
 
 !.env.example
+
+android/.gradle/
+android/**/build/
+android/local.properties
+android/debug.keystore

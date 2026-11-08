@@ -47,3 +47,7 @@ Supabase Auth supplies `auth.users`, email verification, password hashing and se
 Email signup/sign-in/sign-out and the profile's name/avatar use Supabase. Guest profiles still work on the device. Coins, gameplay statistics, purchases and crew customization currently continue using the game's existing local save. The tables/RPCs for those features are ready for a later server-integration pass; they are not silently treated as authoritative cloud progress. A trusted match-validation backend is still needed before cloud currency rewards can be enabled safely.
 
 This schema is validated locally against an embedded PostgreSQL engine with a Supabase Auth/role test harness. The owner has applied the SQL, and the live catalog API responds successfully. A real email-confirmation/sign-in round trip must still be verified with the owner’s account.
+
+## 2.2 upgrade
+
+For profiles with gallery photos/countries, public rankings, paid Freeze and online point challenges, run `upgrade-2.2.sql` after 001. It bundles migrations 002, 003 and 004. The owner has applied this upgrade. See the repository's `ONLINE.md` for the server authority, escrow/refund rules and current validation limits. Do not rerun 001 after applying the upgrade, because later migrations extend its signup behavior.
