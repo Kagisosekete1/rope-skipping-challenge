@@ -2994,10 +2994,8 @@ em {
 .information-modal p { font-size:15px; line-height:1.65; }
 .information-modal input { display:block; padding:12px; margin:12px 0; width:100%; }
 @media(max-height:650px){.tools-toggle{bottom:90px}.powerup-bar.tools-open{bottom:130px}.dice-showcase{width:70px!important;height:68px!important}}
-.screen-gameplay .world { bottom:220px; }
-.screen-gameplay::after { content:""; position:absolute; left:0; right:0; bottom:0; height:220px; background:linear-gradient(#053776ed,#031334); pointer-events:none; z-index:1; }
 .screen-gameplay .game-controls { z-index:13; }
 .dice-showcase { bottom:110px !important; }
 .tools-toggle { bottom:150px; }
 .keyboard-tip { z-index:14; }
-@media(max-height:650px){.screen-gameplay .world{bottom:170px}.screen-gameplay::after{height:170px}.dice-showcase{bottom:98px!important}.tools-toggle{bottom:120px}.powerup-bar.tools-open{bottom:165px}}
+@media(max-height:650px){.dice-showcase{bottom:98px!important}.tools-toggle{bottom:120px}.powerup-bar.tools-open{bottom:165px}}
