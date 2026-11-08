@@ -2999,3 +2999,6 @@ em {
 .tools-toggle { bottom:150px; }
 .keyboard-tip { z-index:14; }
 @media(max-height:650px){.dice-showcase{bottom:98px!important}.tools-toggle{bottom:120px}.powerup-bar.tools-open{bottom:165px}}
+
+/* View is a transparent tracking window; its canvas renders beneath it. */
+.dice-showcase { background:transparent !important; box-shadow:0 0 14px #26dfff50; }

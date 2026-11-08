@@ -223,6 +223,8 @@ export default function App({ splashDelay = 1800 }) {
   if (!engine.current) engine.current = new Match();
   engine.current.onChange = setMatch;
   const current = match || engine.current.snapshot();
+  const lastDie = useRef(1);
+  if (current.needed > 0) lastDie.current = current.needed;
   useEffect(() => {
     const onInstall = (e) => {
       e.preventDefault();
@@ -583,8 +585,7 @@ export default function App({ splashDelay = 1800 }) {
       </div>
       <div className="vignette" />
       {(["shop", "select"].includes(screen) ||
-        (screen === "gameplay" &&
-          ["rolling", "ready"].includes(current.state))) && (
+        screen === "gameplay") && (
         <div className="shop-render">
           <Canvas
             eventSource={root}
@@ -596,15 +597,14 @@ export default function App({ splashDelay = 1800 }) {
           </Canvas>
         </div>
       )}
-      {screen === "gameplay" &&
-        ["rolling", "ready"].includes(current.state) && (
+      {screen === "gameplay" && (
           <View className="dice-showcase" index={1}>
             <PerspectiveCamera makeDefault position={[0, 0, 3.6]} fov={40} />
             <ambientLight intensity={1.7} />
             <directionalLight position={[-3, 4, 5]} intensity={3.2} />
             <Dice
               position={[0, 0, 0]}
-              value={current.needed || 1}
+              value={lastDie.current}
               rolling={current.state === "rolling"}
               scale={1.2}
             />
