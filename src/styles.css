@@ -3002,3 +3002,8 @@ em {
 
 /* View is a transparent tracking window; its canvas renders beneath it. */
 .dice-showcase { background:transparent !important; box-shadow:0 0 14px #26dfff50; }
+
+.profile .photo-picker { font-size:13px !important; min-height:48px !important; padding:12px 16px !important; width:100%; }
+.profile #gallery-photo[hidden] { display:none !important; }
+.photo-help,.photo-message { font-size:12px; line-height:1.5; margin-top:8px; max-width:290px; }
+.photo-message { color:#fff29a; }

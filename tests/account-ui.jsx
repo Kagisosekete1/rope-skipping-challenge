@@ -107,6 +107,9 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
         />,
       );
     });
+    await click(button("CHOOSE GALLERY PHOTO"));
+    assert.match(document.querySelector(".photo-message").textContent,/Sign in below/);
+    assert.equal(signedUp,null,"photo chooser never submits account forms");
     await click(button("New to the playground? Create an account"));
     await fill("profile-email", user.email);
     await fill("profile-password", "sample-password-123");
@@ -115,7 +118,7 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
     assert.equal(signedUp.options.data.display_name, "My Crew");
     assert.ok(signedUp.options.emailRedirectTo.endsWith("/?profile=1"));
     assert.match(
-      document.querySelector('[role="status"]').textContent,
+      document.querySelector('.profile-status').textContent,
       /Check your email/,
     );
     await click(button("Already have an account? Sign in"));
@@ -127,6 +130,11 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
       /Signed in/,
     );
     assert.equal(document.getElementById("player-name").value, "Rope Star");
+    let pickerOpened=0;
+    document.getElementById("gallery-photo").click=()=>pickerOpened++;
+    await click(button("CHOOSE GALLERY PHOTO"));
+    assert.equal(pickerOpened,1,"signed-in tap directly opens the native file picker");
+    assert.equal(requests.length,0,"photo chooser does not submit profile form");
     await fill("player-name", "New Player");
     await click(document.querySelector('[aria-label="yellow profile avatar"]'));
     await click(button("SAVE PROFILE"));

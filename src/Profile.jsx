@@ -1,6 +1,6 @@
 import { COUNTRIES } from "./countries";
 import { preparePhoto } from "./photos";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase as configuredClient } from "./supabase";
 import {
   AVATARS,
@@ -22,6 +22,8 @@ export default function Profile({
     [busy, setBusy] = useState(false),
     [status, setStatus] = useState(""),
     [authReady, setAuthReady] = useState(!client);
+  const photoInput = useRef(null);
+  const [photoStatus, setPhotoStatus] = useState("");
   useEffect(() => {
     setDraft(localProfile(profile));
   }, [profile]);
@@ -186,13 +188,13 @@ export default function Profile({
   async function upload(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (!file || busy) return;
     if (!session) {
       setStatus("Sign in to upload a public profile photo.");
       return;
     }
     setBusy(true);
-    setStatus("");
+    setPhotoStatus("Preparing your photo…");
     try {
       const blob = await preparePhoto(file),
         extension =
@@ -203,16 +205,17 @@ export default function Profile({
               : "webp";
       const path =
         session.user.id + "/" + crypto.randomUUID() + "." + extension;
+      setPhotoStatus("Uploading your photo…");
       const { error } = await client.storage
         .from("player-avatars")
         .upload(path, blob, { contentType: blob.type, upsert: false });
       if (error) throw error;
       setDraft((d) => ({ ...d, photoPath: path }));
-      setStatus(
+      setPhotoStatus(
         "Photo uploaded. Save your profile to publish it on the leaderboard.",
       );
     } catch (e) {
-      setStatus(e.message || "Photo upload failed.");
+      setPhotoStatus(e.message || "Photo upload failed. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -302,15 +305,21 @@ export default function Profile({
             </span>
           )}
           <div>
-            <label className="button blue photo-picker">
-              CHOOSE GALLERY PHOTO
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={busy || !session}
-                onChange={upload}
-              />
-            </label>
+            <button type="button" className="button blue photo-picker" disabled={busy || !authReady}
+              onClick={() => {
+                if (!session) {
+                  setPhotoStatus("Sign in below to add your gallery photo to your account.");
+                  document.getElementById("profile-email")?.scrollIntoView?.({behavior:"smooth",block:"center"});
+                  document.getElementById("profile-email")?.focus();
+                  return;
+                }
+                photoInput.current?.click();
+              }}>
+              {busy ? "PLEASE WAIT…" : "CHOOSE GALLERY PHOTO"}
+            </button>
+            <input ref={photoInput} id="gallery-photo" type="file" accept="image/*,.heic,.heif" hidden disabled={busy || !session} onChange={upload} />
+            <p className="photo-help">{session ? "Choose a photo, then tap Save Profile." : "Sign in to upload a gallery photo. Crew avatars work for guests."}</p>
+            {photoStatus && <p className="photo-message" role="status">{photoStatus}</p>}
             {draft.photoPath && (
               <button
                 className="text-button"
@@ -372,8 +381,7 @@ export default function Profile({
             <b>Signed in</b>
             <p className="account-email">{session.user.email}</p>
             <p>
-              Your name and avatar sync to this account. Coins and match
-              progress currently stay on this device.
+              Your profile syncs to this account. Check Settings for your cloud progress save status.
             </p>
             <button className="text-button" onClick={signOut} disabled={busy}>
               Sign out
