@@ -1,70 +1,67 @@
-# Rope Skipping Challenge - full project
+# Rope Skipping Challenge — 3D rebuild
 
-A turn-based 3D rope-skipping arcade game (Three.js, plain JavaScript, no build step).
-Roll the dice, then jump the rope that many times. First to 100% wins.
+A playable browser game built with React 19, Three.js, React Three Fiber, Drei and GSAP. The welcome scene, characters, playground, rope, dice, product previews and mode previews use actual 3D meshes. No reference image is used as a character, game background or gameplay substitute.
 
-## Run it
-Needs a local web server (service workers do not work from file://):
+## Run
 
-    cd rope-skipping-challenge
-    python3 -m http.server 8080
-    # open http://localhost:8080
+Requires Node.js 20.19+ or 22.12+.
 
-Three.js and the GLTF loader are bundled locally in js/vendor, so startup does not depend on a CDN.
-The service worker caches the game for offline play.
+```sh
+npm ci
+npm run dev
+```
 
-## Put it on the web / install on a phone
-Upload this whole folder to Netlify Drop, Cloudflare Pages or GitHub Pages (HTTPS required).
-Open the address on a phone: Android Chrome -> Settings -> "Install app on this phone";
-iPhone Safari -> Share -> Add to Home Screen. See INSTALL.txt.
+Open the local address printed by Vite. For another device on the same network, use the host computer's LAN IP and Vite's port. For an installable phone version, serve the production build over HTTPS.
 
-## Files
-    index.html              screens (welcome, home, settings, ranks, profile, shop, HUD, overlays)
-    css/style.css           all styling
-    js/game.js              all game code (sections below, search for "/* =====")
-    sw.js                   service worker (offline cache; bump V when you change files)
-    manifest.webmanifest    PWA manifest
-    icons/                  app icons (192, 512)
-    reference/              the three character crops from your design, for image-to-3D tools
-    _headers                Netlify / Cloudflare header rules
+```sh
+npm test
+npm run test:scene
+npm run build
+npm run preview
+```
 
-## js/game.js sections
-    Sound                   Web Audio effects (jump, ok, bad, win)
-    Kids crowd cheer        synthesized crowd (noise + claps + kid voices)
-    Nursery-song music      Twinkle Twinkle, Mary Had a Little Lamb, Row Row Row Your Boat (music-box)
-    Scene / stage           renderer, camera fit, lights, court, wall, buildings, trees
-    Scenery polish          gradient sky, clouds, court lines, chain-link fence
-    Ambient life            birds and walkers behind the kids
-    Characters              person() builder + jumper and two rope holders
-    Rope                    rope curve, hand attachment, arms
-    Dice (CSS 3D)          pip dice, fair random (crypto)
-    Match / game state      turns, jump timing, AI, scoring, finish, rewards
-    Loop                    per-frame update and animation
-    Online play             optional 2-phone mode (needs the Claude "room" feature; shows a message elsewhere)
-    Power-ups               slow rope, shield, boost (1 each per match)
-    Pause / Effects         pause overlay, sparkles, screen shake
-    Shop                    outfits, ropes, hair colours (coins, saved in localStorage)
-    GLB character import    load your own rigged .glb for each character
-    Pages                   rankings (rank points + tiers), profile, shop, settings
-    Welcome screen          logo screen and PLAY
+Deploy the `dist/` directory to a static host. All runtime scripts and fonts are bundled locally. Production includes a generated service worker and app manifest for installation and offline loading after the first successful visit. Use `npm run build` whenever changing the source. GitHub source storage does not itself deploy the game.
 
-## Game rules (tunable constants near "Match / game state")
-- Jump window: airborne (height > 0.3) when the rope reaches the ground; jump lasts 0.52 s, cooldown 0.45 s.
-- Rope period 1.5 s, speeds to 0.85 s as jumps land. +5% per jump, +5% for clearing the roll, +2% perfect.
-- A miss ends the turn (landed jumps are kept, bonus lost). First to 100% wins.
-- AI: Easy / Normal / Hard differ only in timing error and chance to skip; it never sees your dice.
-- Rank points: win +30, loss -10 (not in 2-player). Tiers: Bronze 0, Silver 100, Gold 250, Platinum 500, Diamond 900.
-- Coins: win 250, loss 80, 2-player 200; +50/20 XP; 200 XP per level; daily +100 coins; win-streak bonus.
+## Play
 
-## Using real 3D characters (GLB)
-Settings -> Custom characters loads one .glb per character.
-Needed per character: humanoid rig; clips named Idle, Jump, Hit (or Fall/Lose), Victory (or Win/Cheer) for the girl;
-Idle and Swing (or Rope/Turn) for the rope holders; a bone with "Hand" in its name (right hand preferred);
-feet at the origin, facing +Z, under about 5 MB and 30k triangles. Use the images in reference/ as input to an
-image-to-3D tool (Higgsfield, Meshy, Tripo, Rodin), then rig and animate in Mixamo.
+Welcome → Play → Home → Let's Play → Select Mode → Play.
 
-## Known gaps
-- Characters are procedural shapes, not the Pixar-style models in the design images (needs GLB assets above).
-- No global leaderboard (needs a server). Rankings are stored per device.
-- No monetization or ads (needs ad/payment SDKs). Shop is cosmetics-only by design.
-- Not yet screen-by-screen matched to the design images: Select Mode, Customize, Rewards, Shop layouts.
+- Solo: compete against the computer at Easy, Normal or Hard.
+- Two players: take turns on the same device.
+- Roll the pip die. Clear that many jumps to earn a 5% bonus.
+- Tap JUMP just before the rope reaches the feet, when the needle enters green.
+- Every successful jump gives 5%; a perfect gives another 2%.
+- A miss ends the turn; first to 100% wins.
+- Desktop: Space rolls/jumps; Escape pauses. On mobile use the on-screen controls.
+- The match pauses when the tab is hidden.
+
+Completed solo wins award 250 coins and 50 XP; losses 80 coins and 20 XP. A two-player match awards 200 coins. Rewards are issued once per completed match. Progress, purchases, character looks and settings save on the current browser/device.
+
+## Screens
+
+Welcome features an extruded 3D logo, animated skipping and a gold Play button. Home links to mode selection and customization. Select Mode includes live 3D character/robot previews. Gameplay has a pip-only 3D die, timing meter, progress bars, jump feedback, turn handling and pause/quit. Customization changes the crew's outfits, hair colors/styles, skin tones, shoes and rope. Match Rewards shows the earned coins, XP and best streak. The Shop displays 3D items, charges earned coins, unlocks items and equips owned ropes. Settings controls sound, music and rendering quality, explains the rules, shows statistics, installs the app and offers a confirmed progress reset.
+
+No online multiplayer, global leaderboard, real-money purchase or ad service is implied by these local game modes.
+
+## 3D implementation
+
+- `src/Character.jsx`: shared procedural character system, rounded lathed torso, joint hierarchies for shoulders/elbows/hips/knees, detailed eyes with highlights and blinking, brows, mouth/teeth, ears/earrings, curved hair strands/curls/braids, hoodie seams/pockets/drawstrings, trainers and laces. All screens use this same source.
+- `src/Scene.jsx`: PBR materials, soft directional shadows, contact-shadow pass on higher quality, locally rendered studio environment, sky, court, procedural graffiti texture, fence, trees and buildings. 3D dice have six pip faces and GSAP rotation.
+- `src/rope.js`: driven position-based rope simulation with inertia, gravity, length constraints, hand anchors and ground constraints. The holders drive its swing. Gameplay evaluates a predictable crossing phase so physics jitter cannot cause unfair misses; this is not a general rigid-body contact solver.
+- `src/game.js`: rendering-independent match state machine.
+- `src/main.jsx`: screen flow, live 3D item previews through shared Drei Views, local economy and controls.
+- `src/styles.css`: responsive glossy interface and neon-bordered panels.
+
+Auto quality caps pixel density and disables the contact-shadow pass on devices reporting four or fewer logical cores; Battery saver forces this tier. Main shadows are 1024 or 2048 according to quality. These are conservative settings, not measured phone FPS guarantees.
+
+## Art quality and validation
+
+The seven supplied images guide the pink ponytail girl, blue curly-haired boy, yellow cap/braids girl, gold rope, pink court, saturated playground and blue/gold interface. The implementation is original procedural 3D, not an exact reproduction of the illustrations. Sculpted silhouette transitions, garment folds and film-quality facial deformation still need artist-made assets to approach the reference fidelity. See `ART-ASSETS.md` for precise requirements.
+
+Automated checks cover dice range, jump arc/cooldown, perfect scoring and bonuses, miss handling, pause, turn changes, rounds, winning, a complete AI match, save fallback and rope stability/anchors/ground/pause. Four additional scene-graph tests mount all three characters and hairstyle variants, advance their joint animations, verify finite mesh transforms and check world-space rope grip anchors using React Three Fiber’s mock renderer; the dice test checks 21 pips and no text geometry. These are not GPU-rendered screenshots. A production build is also required before release.
+
+This rebuild has not yet received visual browser QA or physical-phone performance measurement: this session did not expose the managed shared-browser control tool. Do not interpret a passing production build or rules tests as visual acceptance. Verify Welcome first, then every screen at 390×844, 768×1024 and 1440×900, plus touch input, full matches, shop/save/reload, audio, installation and offline reload on real devices.
+
+## Licensing
+
+Three.js attribution is in `public/licenses/THREE.txt`; bundled Helvetiker font attribution is in `public/fonts/LICENSE.txt`; Nunito uses the SIL Open Font License in `public/fonts/OFL-nunito.txt`. Dependency licenses remain with their packages. Original supplied reference crops are kept in `reference/` for art direction only; they are not loaded by the game.

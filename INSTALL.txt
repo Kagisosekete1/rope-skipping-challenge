@@ -1,16 +1,14 @@
-ROPE SKIPPING CHALLENGE - INSTALL ON YOUR PHONE
-(an installable app needs a web address; these steps take about 2 minutes and are free)
+Rope Skipping Challenge v2
 
-1. Unzip this folder on a computer (or phone).
-2. Put the folder online, using ONE of these:
-   - Netlify Drop: go to app.netlify.com/drop and drag the whole folder in. You get an https address immediately.
-   - Cloudflare Pages: Workers and Pages > Create > Pages > Upload assets, upload the folder.
-   - GitHub Pages: create a repository, upload these files, then Settings > Pages > deploy from the main branch.
-3. Open the https address on your phone.
-4. Install:
-   - Android (Chrome): tap Settings in the game then "Install app on this phone", or browser menu > Install app.
-   - iPhone (Safari): tap Share > Add to Home Screen.
-5. Open it from the new home-screen icon. After the first load it also works offline.
+1. Install Node.js 20.19+ or 22.12+.
+2. In this project folder run: npm ci
+3. Run: npm run dev
+4. Open the address printed by Vite.
 
-Notes: Online play with a friend only works in the Claude version. Progress is saved per address.
-When you update the game, upload the new files; the app refreshes the next time it opens online.
+For web hosting: npm run build, then upload dist/ to an HTTPS static host.
+For phone installation: open the HTTPS game URL in Chrome or Safari and use
+Install app / Add to Home Screen. Settings also contains an installation button.
+The production build caches the game locally after its first successful load.
+
+Progress stays on the device/browser. GitHub stores source; uploading source
+alone does not create a playable hosted URL.
