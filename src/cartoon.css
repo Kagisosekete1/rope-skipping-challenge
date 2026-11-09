@@ -214,3 +214,91 @@ em { color:#d54f6e; }
 .hud-vs,.player strong { color:var(--ink); text-shadow:none; }
 @media(max-width:750px){.tools-toggle{top:195px}.powerup-bar.tools-open{top:231px}.feedback,.showing-die .feedback{top:236px}}
 @media(max-height:650px){.tools-toggle{top:170px}.powerup-bar.tools-open{top:205px}.feedback,.showing-die .feedback{top:212px}}
+/* Clean television cels: outlines define shapes without drop shadows or glow. */
+.app,.app *,.app *::before,.app *::after { box-shadow:none !important; text-shadow:none !important; filter:none !important; }
+.app :is(h1,h2,h3,h4,p,span,strong,b,small,label,li,button,a,em,select,input) { color:#26313b; }
+.app button:disabled { opacity:1; color:#52616a; background-color:#e2e4d7; }
+.screen-title { border-width:2px; font-size:clamp(24px,4vw,42px); line-height:1.15; }
+.customize .screen-title,.customize .screen-title em { font-size:clamp(21px,3vw,34px); }
+.app .home-logo span { color:#ffe16a; -webkit-text-stroke:1px #26313b; }
+.app .home-logo strong { color:#26313b; }
+.app .setting small,.app .community-note,.app .photo-help,.app .save-note { color:#405561; font-size:12px; line-height:1.5; }
+.app .button,.app .round,.app .glass,.app .player,.app .wallet,.app .level,.app .shop-card,.app .mode-card,.app .bottom-nav { border-width:2px; }
+.app .mode-card,.app .shop-card { border-color:#26313b; }
+.app .button { line-height:1.2; overflow-wrap:anywhere; }
+.app .tool-actor button { background:#f7ecd0; color:#26313b; border:1px solid #26313b; }
+.app .tool-actor button.active { background:#ffe16a; }
+.app .player-name { font-size:clamp(13px,2.3vw,20px); line-height:1.15; overflow-wrap:anywhere; }
+.app .live-energy small { font-size:9px; min-width:52px; }
+.app .powerup-bar>button { font-size:10px; }
+.app .powerup-bar>button small { font-size:10px; }
+.app .profile-status,.app .photo-message { color:#7b3e36; font-size:13px; }
+.app .leader-photo,.app .profile-photo-placeholder { background:#f1c9b6; color:#26313b; }
+.app .profile-panel { scrollbar-color:#697d7a #f4e9d4; }
+.custom-panel { padding:15px; gap:12px; justify-content:flex-start; }
+.custom-row { flex-shrink:0; min-height:91px; }
+.custom-category { min-width:58px; border-width:2px; }
+.custom-category b { font-size:11px; }
+.options { overflow-x:auto; overflow-y:hidden; padding:4px 3px 9px; gap:8px; scrollbar-width:thin; scrollbar-color:#718582 #f4e9d4; }
+.app .swatch { display:flex; flex:0 0 76px; flex-direction:column; justify-content:center; align-items:center; gap:3px; height:80px; min-height:80px; padding:4px; background:#fff9e7; border:1.5px solid #26313b; border-radius:13px; }
+.app .swatch.picked { background:#ffecab; outline:2px dashed #c56b77; outline-offset:1px; }
+.custom-item { display:block; width:66px; height:53px; flex-shrink:0; }
+.app .item-caption { display:block; width:100%; font-size:10px; line-height:1.1; white-space:normal; overflow-wrap:anywhere; text-align:center; }
+.swatch .check { position:absolute; right:1px; top:1px; background:#b4d492; border:1px solid #26313b; }
+.swatch .check svg { width:11px; height:11px; }
+.hair-style { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; flex-shrink:0; }
+.hair-style>span { grid-column:1/-1; font-size:12px; }
+.app .hair-style button { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px; background:#fff8e4; min-height:86px; border:1px solid #26313b; border-radius:12px; }
+.app .hair-style button.active { background:#ffecab; outline:2px dashed #c56b77; }
+.app .hair-style button span { font-size:10px; line-height:1.15; }
+.style-item { width:65px; max-width:100%; height:60px; }
+.crew-portrait { display:block; width:64px; height:59px; object-fit:contain; border-radius:14px; background:#f5e9cb; }
+.character-picker button { display:flex; align-items:center; gap:7px; min-height:69px; }
+.profile-avatars button .crew-portrait { width:62px; height:56px; }
+.profile-avatars button { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; }
+.app .profile-avatars button.selected { background:#ffecab; }
+.app .balance-stack small { font-size:9px; }
+.app .information-modal p,.app .information-modal li { font-size:15px; line-height:1.6; }
+.app .round-label { top:var(--hud-bottom,140px); }
+.app .pause-button { top:var(--hud-bottom,140px); }
+.app .tools-toggle { top:calc(var(--hud-bottom,140px) + 63px); }
+.app .feedback,.app.showing-die .feedback { top:calc(var(--hud-bottom,140px) + 105px); }
+.app .powerup-bar.tools-open { top:calc(var(--hud-bottom,140px) + 99px); }
+@media(max-width:750px){
+ .app { --hud-bottom:136px; }
+ .custom-panel { left:42%; right:3%; width:55%; padding:10px 7px; }
+ .custom-row { gap:6px; }
+ .custom-category { min-width:40px; width:40px; padding:6px 3px; }
+ .custom-category b { font-size:9px; }
+ .custom-category svg { width:21px; }
+ .app .swatch { flex-basis:66px; height:76px; min-height:76px; }
+ .custom-item { width:58px; height:49px; }
+ .app .item-caption { font-size:9px; }
+ .custom-name { max-width:39%; padding:7px; }
+ .app .custom-name strong { font-size:11px; }
+ .app .custom-name span { font-size:10px; }
+ .character-picker { left:3%; right:auto; width:43%; gap:4px; flex-wrap:wrap; }
+ .character-picker button { padding:4px; min-width:52px; gap:3px; flex-direction:column; }
+ .character-picker .crew-portrait { width:45px; height:44px; }
+ .character-picker button span { font-size:9px; }
+ .hair-style { gap:4px; }
+ .style-item { height:45px; }
+ .app .hair-style button span { font-size:9px; }
+ .app .profile-avatars button { font-size:11px; padding:7px 3px; }
+ .app .live-energy small { font-size:8px; min-width:49px; }
+ .app .player-name { font-size:13px; }
+ .app .welcome-bottom p { font-size:13px; }
+ .app .welcome-bottom .tiny { font-size:10px; }
+}
+@media(max-height:650px){.app{--hud-bottom:115px}.character-picker .crew-portrait{width:38px;height:36px}.character-picker button{min-height:54px}}
+.app .level small,.app .card-kicker,.app .mode-desc,.app .price,.app .keyboard-tip { font-size:11px; line-height:1.3; }
+.app .item-caption,.app .custom-category b,.app .hair-style button span { font-size:10px; overflow-wrap:anywhere; }
+.app .live-energy small { font-size:9px; }
+.app .profile-form label,.app .account-form label { font-size:13px; }
+.app .profile input,.app .profile select,.app .account-form input,.app .account-form select,.app .community input { font-size:16px; }
+.app .shop-card>b { white-space:normal; overflow-wrap:anywhere; text-align:center; min-height:2.3em; line-height:1.2; }
+.app .leaderboard-row>div { flex:1; min-width:0; }
+.app .leaderboard-row strong,.app .account-email { overflow-wrap:anywhere; }
+.app .rank-points { max-width:110px; overflow-wrap:anywhere; font-size:clamp(14px,3.8vw,22px); }
+.app .leaderboard-row small { font-size:11px; line-height:1.3; }
+.app button:disabled span,.app button:disabled .item-caption { color:#52616a; }

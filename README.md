@@ -56,3 +56,12 @@ online wallet as the live points badge. Leaderboards refresh every 2.5 seconds.
 Apply migration 006 for push room/wallet updates (polling also remains available).
 Gender is selected at registration, can be changed in Profile, and is private
 Auth metadata, including an explicit Prefer not to say option.
+
+### Readable 2D art refinement (3.0.1)
+Customization now uses real SVG artwork for hoodies, paired sneakers, styled hair,
+faces/skin tones and handled ropes. Hair-style and crew/avatar selection also
+show drawn previews. The character library has fuller fringes, lighter linework,
+coloured irises and freckles. App-wide drop shadows, text shadows and glow are
+removed. Dark text sits on light surfaces, form fonts are larger and item rows
+scroll to keep the drawings usable on phones. The gameplay header measures its
+actual height so long names do not overlap Round, Tools and feedback.

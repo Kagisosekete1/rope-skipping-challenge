@@ -1,7 +1,7 @@
 import { COLORS, SKIN, ITEMS, jumpHeight } from './game';
 export const INK='#202533';
-function path(c,d,fill,stroke=INK,width=5){c.beginPath();const p=new Path2D(d);if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.lineJoin='round';c.lineCap='round';c.stroke(p);}}
-function oval(c,x,y,rx,ry,color,stroke=INK,lw=4){c.beginPath();c.ellipse(x,y,rx,Math.max(.1,ry),0,0,Math.PI*2);c.fillStyle=color;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=lw;c.stroke();}}
+function path(c,d,fill,stroke=INK,width=3.6){c.beginPath();const p=new Path2D(d);if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.lineJoin='round';c.lineCap='round';c.stroke(p);}}
+function oval(c,x,y,rx,ry,color,stroke=INK,lw=2.8){c.beginPath();c.ellipse(x,y,rx,Math.max(.1,ry),0,0,Math.PI*2);c.fillStyle=color;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=lw;c.stroke();}}
 function line(c,d,color=INK,w=5){path(c,d,null,color,w);}
 function box(c,x,y,w,h,r,color){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=color;c.fill();c.strokeStyle=INK;c.lineWidth=4;c.stroke();}
 export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,emotion='idle',holder=0,phase=0,walk=false,robot=false,flip=false}={}){
@@ -36,14 +36,17 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  if(look.style===2){oval(c,-56,-281,36,34,hair);oval(c,53,-282,33,32,hair);}
  oval(c,-53,-230,17,22,skin);oval(c,52,-230,16,22,skin);
  path(c,'M-52 -274 Q-28 -313 26 -289 Q67 -275 57 -232 Q64 -189 26 -176 Q-24 -162 -49 -198 Q-65 -231 -52 -274Z',skin);
- path(c,'M-56 -247 Q-78 -297 -29 -309 Q13 -327 48 -292 Q68 -286 60 -249 L43 -269 Q15 -257 14 -284 Q-5 -254 -43 -264Z',hair);
+ path(c,'M-56 -247 C-76 -283 -51 -316 -15 -312 C9 -330 42 -310 49 -292 C70 -285 67 -258 58 -246 L44 -264 Q24 -263 17 -283 C2 -258 -12 -261 -21 -275 Q-31 -249 -48 -262Z',hair);
+ line(c,'M-49 -278 Q-29 -301 -9 -293 M0 -303 Q29 -299 43 -277','#98704e',2);
  if(kind===1){for(let i=0;i<6;i++)oval(c,-48+i*19,-294-Math.sin(i)*7,15,18,hair);}
  if(kind===2){for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(48+i*3),-203+i*17,12-i,14,hair,INK,3);path(c,'M-62 -284 Q-35 -334 24 -315 Q53 -310 55 -278Z','#ffd749');path(c,'M-63 -283 Q-9 -298 70 -281 Q87 -262 59 -267 L-58 -272Z','#ffd749');}
  if(kind===0&&look.style!==1){oval(c,-43,-289,13,9,shirt);line(c,'M-52 -286 L-35 -294','#fff8e6',3);}
  // Large expressive eyes, animated pupils and brows.
  const blink=time%4.1<.13&&!excited,eyeY=miss?-225:-235;
- for(const side of [-1,1]){const ex=side*23+4;oval(c,ex,eyeY,21,blink?2:29,'#fffdf2',INK,3);if(!blink){oval(c,ex+4,eyeY+4,10,17,kind===1?'#433129':'#6c3e27',INK,2);oval(c,ex+5,eyeY+5,5,11,INK,null);oval(c,ex+8,eyeY-3,3,5,'#fff',null);}line(c,`M${ex-15} ${eyeY-38+(miss?side*6:0)} Q${ex} ${eyeY-47} ${ex+14} ${eyeY-37}`,hair,6);if(kind!==1&&!blink)line(c,`M${ex-18} ${eyeY-14} l-7 -7 M${ex-20} ${eyeY-5} l-8 -3`,INK,3);}
+ for(const side of [-1,1]){const ex=side*23+4;oval(c,ex,eyeY,21,blink?2:29,'#fffdf2',INK,3);if(!blink){oval(c,ex+4,eyeY+4,12,17,kind===1?'#73ad70':kind===2?'#9680ba':'#59afd0',INK,2);oval(c,ex+5,eyeY+5,6,11,INK,null);oval(c,ex+8,eyeY-3,3,5,'#fff',null);}line(c,`M${ex-15} ${eyeY-38+(miss?side*6:0)} Q${ex} ${eyeY-47} ${ex+14} ${eyeY-37}`,hair,4);if(kind!==1&&!blink)line(c,`M${ex-18} ${eyeY-14} l-7 -7 M${ex-20} ${eyeY-5} l-8 -3`,INK,3);}
  oval(c,7,-214,10,7,skin,INK,2.5);oval(c,-34,-210,10,5,'#e57f70',null);oval(c,40,-208,9,5,'#e57f70',null);
+ for(const [fx,fy] of [[-40,-211],[-32,-207],[-24,-211],[33,-210],[41,-207],[46,-213]])oval(c,fx,fy,1.6,1.5,'#b8624d',null);
+
  if(miss){path(c,'M-13 -190 Q3 -207 23 -190',null,INK,4);oval(c,50,-239,5,10,'#6bddeb',INK,2);}
  else{path(c,excited?'M-24 -202 Q3 -179 29 -200 Q22 -157 -7 -170 Q-22 -179 -24 -202Z':'M-20 -201 Q4 -181 27 -200 Q14 -168 -8 -181Z','#60252e',INK,3);path(c,'M-15 -199 Q4 -188 22 -198 L17 -188 Q0 -184 -11 -192Z','#fffdf2',null);if(excited)oval(c,8,-175,12,5,'#ff8194',null);}
  }

@@ -275,6 +275,13 @@ export default function App({ splashDelay = 1800 }) {
       return () => ctx.revert();
     }
   }, [screen]);
+  useLayoutEffect(()=>{
+    if(screen!=="gameplay")return;
+    const hud=root.current?.querySelector('.match-hud');if(!hud)return;
+    const fit=()=>{const rect=hud.getBoundingClientRect(),base=root.current?.getBoundingClientRect();if(rect.height>0&&base)root.current.style.setProperty('--hud-bottom',Math.ceil(rect.bottom-base.top+10)+'px');};
+    fit();const observer=window.ResizeObserver?new window.ResizeObserver(fit):null;observer?.observe(hud);window.addEventListener('resize',fit);
+    return()=>{observer?.disconnect();window.removeEventListener('resize',fit);root.current?.style.removeProperty('--hud-bottom');};
+  },[screen]);
   function go(s) {
     setToolsOpen(false);
     stopVictory();
@@ -953,11 +960,8 @@ export default function App({ splashDelay = 1800 }) {
                         }
                         aria-pressed={chosen}
                       >
-                        {key === "skin" ? (
-                          <span className="skin-block" />
-                        ) : (
-                          <Icon name={icon} size={key === "outfit" ? 35 : 30} />
-                        )}{" "}
+                        <CartoonItem kind={selection} category={key} item={key==='skin'?{}:it} index={i} look={draft} className="custom-item" label={key==='skin'?`Skin tone ${i+1}`:it.name}/>
+                        <span className="item-caption">{key==='skin'?`Tone ${i+1}`:it.name}</span>
                         {chosen && (
                           <i className="check">
                             <Icon name="check" size={13} />
@@ -978,7 +982,7 @@ export default function App({ splashDelay = 1800 }) {
                   disabled={selection !== 0}
                   onClick={() => updateDraft("style", i)}
                 >
-                  {s}
+                  <CartoonItem kind={selection} category="style" index={i} look={draft} className="style-item" label={s}/><span>{s}</span>
                 </button>
               ))}
             </div>
@@ -992,7 +996,7 @@ export default function App({ splashDelay = 1800 }) {
                 onClick={() => chooseCharacter(i)}
                 aria-label={`Customize ${["pink girl", "blue boy", "yellow girl"][i]}`}
               >
-                <Icon name={i === 1 ? "jump" : "face"} size={32} />
+                <CartoonPreview kind={i} look={save.looks[i]} portrait className="crew-portrait"/>
                 <span>{["PINK", "BLUE", "YELLOW"][i]}</span>
               </button>
             ))}

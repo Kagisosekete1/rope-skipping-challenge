@@ -4,6 +4,7 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createCanvas,Path2D,GlobalFonts} from '@napi-rs/canvas';
 import {drawCharacter,drawBackground,scenePose} from '../src/cartoon-art';
+import ItemArt from '../src/ItemArt';
 import {CartoonDie} from '../src/CartoonScene';
 import {Match,defaultSave} from '../src/game';
 globalThis.Path2D=Path2D;GlobalFonts.registerFromPath('public/fonts/nunito-900.ttf','Nunito');
@@ -17,4 +18,9 @@ test('crew cosmetics, facial reactions, BeatBot and every playground palette ren
 });
 test('2D rope and jumper read the existing authoritative timing without modifying scores',()=>{
  const engine={current:new Match(()=>{},()=>.4)};engine.current.phase=4.3;engine.current.jumpAge=.38;const before=engine.current.snapshot();const pose=scenePose(engine,10,'gameplay');assert.equal(pose.phase,4.3);assert.ok(pose.jump>1);assert.deepEqual(engine.current.snapshot(),before);const welcome=scenePose(engine,.1,'welcome');assert.ok(Number.isFinite(welcome.jump));assert.equal(defaultSave().level,1);
+});
+
+test('customization uses standalone SVG artwork and visibly changes every skin, hair and hairstyle selection',()=>{
+ for(const category of ['skin','hair','style']){const options=category==='skin'?5:3;const outputs=new Set();for(let index=0;index<options;index++){const markup=renderToStaticMarkup(<ItemArt category={category} index={index} look={{hair:0,skin:2}}/>);assert.match(markup,/role="img"/);assert.match(markup,/<path/);assert.equal(markup.includes('<canvas'),false);outputs.add(markup);}assert.equal(outputs.size,options);}
+ for(const category of ['outfit','shoes','rope']){const first=renderToStaticMarkup(<ItemArt category={category} item={{color:'#ff4488'}}/>),second=renderToStaticMarkup(<ItemArt category={category} item={{color:'#3366ee'}}/>);assert.notEqual(first,second);assert.match(first,/#ff4488/);}
 });

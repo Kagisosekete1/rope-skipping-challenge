@@ -1,4 +1,5 @@
 import { COUNTRIES } from "./countries";
+import { CartoonPreview } from "./CartoonScene";
 import { preparePhoto } from "./photos";
 import React, { useEffect, useState, useRef } from "react";
 import { supabase as configuredClient } from "./supabase";
@@ -366,7 +367,7 @@ export default function Profile({
               style={{ "--avatar": ["#fc278b", "#087ff6", "#ffcb13"][i] }}
               onClick={() => setDraft((d) => ({ ...d, avatar }))}
             >
-              <span>{["P", "B", "Y"][i]}</span>
+              <CartoonPreview kind={i} portrait className="crew-portrait"/>
               {["Ponytail", "Blue crew", "Sunshine"][i]}
             </button>
           ))}
