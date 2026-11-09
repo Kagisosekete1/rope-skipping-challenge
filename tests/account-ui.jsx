@@ -52,6 +52,7 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
         signedIn = args;
         return { error: null, data: { session: { user } } };
       },
+      updateUser: async ({data})=>({data:{user:{...user,user_metadata:data}},error:null}),
       signOut: async () => {
         signOuts++;
         return { error: null };
@@ -113,8 +114,10 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
     await click(button("New to the playground? Create an account"));
     await fill("profile-email", user.email);
     await fill("profile-password", "sample-password-123");
+    await act(async()=>{const select=document.getElementById("signup-gender");select.value="female";select.dispatchEvent(new window.Event("change",{bubbles:true}));});
     await click(button("CREATE ACCOUNT"));
     assert.equal(signedUp.email, user.email);
+    assert.equal(signedUp.options.data.gender,"female");
     assert.equal(signedUp.options.data.display_name, "My Crew");
     assert.ok(signedUp.options.emailRedirectTo.endsWith("/?profile=1"));
     assert.match(

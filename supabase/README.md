@@ -62,3 +62,12 @@ and settled balances are unchanged. The client removes owned gallery photos via
 Storage API before invoking deletion. No service key is shipped to browsers.
 Sign in and check Settings for a successful cloud save before reinstalling.
 Simultaneous devices use the latest completed save, not a merge of two matches.
+
+## Live updates (006)
+Run `006_live_updates.sql` after 005. It enables Supabase Realtime publication
+for challenge rooms and point wallets under their existing participant/owner
+RLS, and timestamps wallet changes so older responses cannot replace newer
+balances. No private wallet is made public. The public leaderboard still uses
+the sanitized ranking RPC, refreshed every 2.5 seconds; online matches use push
+updates plus a non-overlapping 500 ms server-tick fallback. Gender selection is
+stored privately in Supabase Auth user metadata and does not need a table field.

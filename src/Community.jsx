@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import { COUNTRIES, flag } from "./countries";
 export function photoUrl(path) {
@@ -7,16 +7,20 @@ export function photoUrl(path) {
     : null;
 }
 export function Leaderboard() {
+  const busy=useRef(false);
   const [rows, setRows] = useState([]),
     [status, setStatus] = useState("Loading the playground rankings…");
   async function load() {
+    if(busy.current || document.hidden)return;
     if (!supabase) {
       setStatus("Rankings are temporarily unavailable.");
       return;
     }
+    busy.current=true;
     const { data, error } = await supabase.rpc("get_leaderboard", {
       p_limit: 100,
     });
+    busy.current=false;
     if (error) {
       setStatus("Rankings are being updated. Try again shortly.");
       return;
@@ -25,7 +29,8 @@ export function Leaderboard() {
     setStatus(data?.length ? "" : "Be the first name on the board!");
   }
   useEffect(() => {
-    load();
+    load();const timer=setInterval(load,2500);window.addEventListener("focus",load);document.addEventListener("visibilitychange",load);
+    return()=>{clearInterval(timer);window.removeEventListener("focus",load);document.removeEventListener("visibilitychange",load);};
   }, []);
   return (
     <section className="community-panel glass">
@@ -36,7 +41,7 @@ export function Leaderboard() {
         </button>
       </div>
       <p className="community-note">
-        Public rankings · Spendable play points · No cash value
+        Online points · Auto-refresh every 2.5 seconds · Coins are for the shop
       </p>
       {status && <p role="status">{status}</p>}
       <div className="leaderboard-rows">

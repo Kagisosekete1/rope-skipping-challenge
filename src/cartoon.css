@@ -184,3 +184,33 @@ em { color:#d54f6e; }
 .reward-line strong,.reward-line svg,.reward-summary,.reward-summary b { color:var(--ink); text-shadow:none; }
 .reward-summary { border-color:var(--ink); background:#e1ebd2; }
 .loading-ball { background:#ffdb65; border:4px solid var(--ink); box-shadow:3px 3px 0 var(--ink); }
+.balance-stack { display:flex; flex-direction:column; gap:7px; align-items:stretch; }
+.wallet span { display:flex; flex-direction:column; }
+.wallet small { font-size:8px; letter-spacing:.4px; }
+.online-points-badge { border:2px solid var(--ink); border-radius:12px; padding:5px 12px; background:#c4e3a7; box-shadow:2px 3px 0 var(--ink); text-align:center; }
+.online-points-badge b,.online-points-badge small { display:block; }
+.online-points-badge small { font-size:8px; }
+.live-energy { display:flex; align-items:center; gap:5px; margin-top:3px; }
+.live-energy>div { flex:1; height:6px; border:1px solid var(--ink); background:#e8dbc5; border-radius:5px; overflow:hidden; }
+.live-energy i { display:block; height:100%; width:100%; background:#e5b346; }
+.live-energy small { font-size:7px; min-width:42px; }
+.tools-toggle { top:183px; bottom:auto !important; left:50%; transform:translateX(-50%); font-size:10px; min-height:28px; padding:5px 12px; border-width:2px; box-shadow:2px 2px 0 var(--ink); }
+.tools-toggle:active { transform:translateX(-50%) translateY(2px); }
+.powerup-bar.tools-open { top:223px; bottom:auto !important; padding:9px; border-width:3px; gap:5px; }
+.powerup-bar>button { min-height:43px; padding:6px 8px; font-size:8px; }
+.powerup-bar>button span { font-size:15px; }
+.cartoon-die.rolling svg { animation:dice-full-spin .44s linear infinite !important; transform-origin:50% 50%; }
+@keyframes dice-full-spin { 0%{transform:rotate(0deg) scale(.92)}50%{transform:rotate(180deg) translateY(-9px) scale(1.05)}100%{transform:rotate(360deg) scale(.92)} }
+.jump-button.tap-a { animation:jump-press-a .18s ease-out; }
+.jump-button.tap-b { animation:jump-press-b .18s ease-out; }
+@keyframes jump-press-a { 50%{transform:scale(.90)} }
+@keyframes jump-press-b { 50%{transform:scale(.90)} }
+.account-form select { padding:10px; background:#fff9e8; border:2px solid var(--ink); border-radius:12px; width:100%; }
+@media(max-width:750px){.round-label{top:132px}.pause-button{top:132px}.feedback,.showing-die .feedback{top:226px;font-size:12px}.player{padding:7px 9px}.powerup-bar.tools-open{max-width:420px}.tools-toggle{top:181px}.home-top .wallet{padding:7px 11px}.online-points-badge{padding:3px 9px}}
+@media(max-height:650px){.tools-toggle{top:155px}.powerup-bar.tools-open{top:190px}.feedback,.showing-die .feedback{top:202px}.round-label{top:111px}.pause-button{top:111px}.player-name{font-size:14px}.live-energy small{font-size:6px}}
+.tools-toggle { top:204px; }
+.powerup-bar.tools-open { top:241px; }
+.feedback,.showing-die .feedback { top:245px; }
+.hud-vs,.player strong { color:var(--ink); text-shadow:none; }
+@media(max-width:750px){.tools-toggle{top:195px}.powerup-bar.tools-open{top:231px}.feedback,.showing-die .feedback{top:236px}}
+@media(max-height:650px){.tools-toggle{top:170px}.powerup-bar.tools-open{top:205px}.feedback,.showing-die .feedback{top:212px}}

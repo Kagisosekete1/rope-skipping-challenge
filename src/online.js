@@ -46,7 +46,7 @@ export class OnlineMatch {
     this.roomId = data.room_id;
     this.stake = Number(data.stake);
     this.names = data.names;
-    this.onWallet?.(data.wallet);
+    if(data.wallet)this.onWallet?.(data.wallet);
     this.tick(0);
     this.emit();
   }
@@ -104,6 +104,8 @@ export class OnlineMatch {
   }
   async request(action) {
     if (this.closed) return false;
+    if(action==="poll"&&this.polling)return false;
+    if(action==="poll")this.polling=true;
     const start = Date.now();
     try {
       const { data, error } = await this.client.rpc("challenge_action", {
@@ -122,17 +124,27 @@ export class OnlineMatch {
         this.emit();
       } else this.onError?.(e.message || "Action could not be sent");
       return false;
-    }
+    } finally {if(action==="poll")this.polling=false;}
   }
   connect() {
     this.timer = setInterval(() => {
       if (!this.busy) this.request("poll");
-    }, 800);
+    }, 500);
+    if(this.client.channel){
+      this.channel=this.client.channel("match-"+this.roomId)
+        .on("postgres_changes",{event:"UPDATE",schema:"public",table:"challenge_rooms",filter:"id=eq."+this.roomId},({new:room})=>{
+          if(this.closed||!room?.state)return;
+          this.apply({...this.remote,...room.state,wallet:null,status:room.status,server_now:Date.now()+this.offset});
+        })
+        .on("postgres_changes",{event:"UPDATE",schema:"public",table:"challenge_wallets"},({new:wallet})=>{if(!this.closed&&wallet)this.onWallet?.({points:wallet.points,freeze_tokens:wallet.freeze_tokens,online_wins:wallet.online_wins,updated_at:wallet.updated_at});})
+        .subscribe();
+    }
     return this;
   }
   close() {
     this.closed = true;
     clearInterval(this.timer);
+    if(this.channel){this.client.removeChannel?.(this.channel);this.channel=null;}
   }
   roll() {
     if (this.isSpectating || this.state !== "idle" || this.busy) return false;

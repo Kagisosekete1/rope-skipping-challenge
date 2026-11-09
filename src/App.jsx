@@ -6,6 +6,7 @@ import { SettingsExtras } from "./SettingsExtras";
 import { useCloudProgress } from "./useCloudProgress";
 import { useAccount } from "./useAccount";
 import { Leaderboard, OnlineLobby } from "./Community";
+import { jumpTap, jumpEnergy } from "./controls";
 import { OnlineMatch } from "./online";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
 import { tone, music, unlockMusic, playVictory, stopVictory } from "./audio";
@@ -84,6 +85,7 @@ function ModePreview({mode,looks}) { return <CartoonPreview className="mode-art 
 export default function App({ splashDelay = 1800 }) {
   const account = useAccount();
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [pendingPower,setPendingPower] = useState(null),[tapPulse,setTapPulse]=useState(0);
   const [toolActor, setToolActor] = useState(0),
     [buyingFreeze, setBuyingFreeze] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -236,8 +238,7 @@ export default function App({ splashDelay = 1800 }) {
           e.preventDefault();
           if (engine.current.state === "idle" && !engine.current.ai)
             engine.current.roll();
-          else if (!engine.current.ai && engine.current.jump())
-            tone("jump", saveRef.current.sound);
+          else jump();
         }
         if (e.code === "Escape") engine.current.pause();
       }
@@ -275,6 +276,7 @@ export default function App({ splashDelay = 1800 }) {
     }
   }, [screen]);
   function go(s) {
+    setToolsOpen(false);
     stopVictory();
     if (engine.current.mode === "online" && engine.current.state === "over")
       engine.current.close();
@@ -284,6 +286,7 @@ export default function App({ splashDelay = 1800 }) {
     setScreen(s);
   }
   function start() {
+    setToolsOpen(false);
     stopVictory();
     if (engine.current.mode === "online") {
       engine.current.close();
@@ -294,6 +297,7 @@ export default function App({ splashDelay = 1800 }) {
     setScreen("gameplay");
   }
   function startOnline(data) {
+    setToolsOpen(false);
     stopVictory();
     engine.current.close?.();
     rewarded.current = false;
@@ -349,13 +353,17 @@ export default function App({ splashDelay = 1800 }) {
         : current.mode === "pvp"
           ? toolActor
           : 0;
-    if (!engine.current.canPower(name, actor)) return;
+    if (pendingPower) return;
+    if (!engine.current.canPower(name, actor)) { notify("This tool is not available in this turn."); return; }
     if (engine.current.mode === "online") {
-      await engine.current.usePower(name);
+      setPendingPower(name);notify(`Activating ${name}…`);
+      try { if(await engine.current.usePower(name)) notify(`${name.toUpperCase()} activated!`); } finally {setPendingPower(null);}
       return;
     }
+    setPendingPower(name);
     try {
       if (name === "freeze") {
+        notify("Activating Freeze…");
         if (account.user) {
           const { data, error } = await account.client.rpc(
             "consume_practice_freeze",
@@ -373,9 +381,10 @@ export default function App({ splashDelay = 1800 }) {
       }
       engine.current.usePower(name, actor, name === "freeze");
       tone("perfect", save.sound);
+      notify(`${name.toUpperCase()} activated!`);
     } catch (e) {
       notify(e.message || "Power-up unavailable");
-    }
+    } finally {setPendingPower(null);}
   }
   async function shareApp(apk = false) {
     const url =
@@ -395,7 +404,10 @@ export default function App({ splashDelay = 1800 }) {
     }
   }
   function jump() {
-    if (!engine.current.ai && engine.current.jump()) tone("jump", save.sound);
+    const result=jumpTap(engine.current);setTapPulse(n=>n+1);
+    if(result==="jump"||result==="warmup")tone("jump", saveRef.current.sound);
+    else if(result==="waiting")notify("Your turn is next—get ready!");
+    else if(result==="frozen")notify("Frozen! Block Freeze or wait for the ice to melt.");
   }
   function roll() {
     if (!engine.current.ai) engine.current.roll();
@@ -543,11 +555,7 @@ export default function App({ splashDelay = 1800 }) {
                 </small>
               </span>
             </button>
-            <button className="wallet" onClick={() => go("shop")}>
-              <Coin />
-              {save.coins.toLocaleString()}
-              <Icon name="plus" />
-            </button>
+            <div className="balance-stack"><button className="wallet" onClick={() => go("shop")} aria-label="Cosmetic coins"><Coin /><span>{save.coins.toLocaleString()}<small>COINS · SHOP</small></span><Icon name="plus" /></button><button className="online-points-badge" onClick={()=>go("leaderboard")}><b>{account.user ? account.wallet ? Number(account.wallet.points).toLocaleString() : "…" : "SIGN IN"}</b><small>ONLINE POINTS · RANKS</small></button></div>
           </div>
           <div className="home-logo">
             <span>ROPE SKIPPING</span>
@@ -688,6 +696,7 @@ export default function App({ splashDelay = 1800 }) {
                   <i style={{ width: current.progress[i] + "%" }} />
                 </div>
                 <strong>{current.progress[i]}%</strong>
+                <LiveEnergy engine={engine} actor={i}/>
               </div>
             ))}
             <span className="hud-vs">VS</span>
@@ -740,7 +749,7 @@ export default function App({ splashDelay = 1800 }) {
                 key={name}
                 className={"power-" + name}
                 disabled={
-                  !engine.current.canPower?.(
+                  !!pendingPower || !engine.current.canPower?.(
                     name,
                     current.mode === "online"
                       ? current.mySlot
@@ -835,13 +844,10 @@ export default function App({ splashDelay = 1800 }) {
             </div>
             <Button
               variant="green"
-              className="jump-button"
+              className={"jump-button " + (tapPulse % 2 ? "tap-a" : "tap-b")}
               onClick={jump}
               disabled={
-                current.state !== "skipping" ||
-                engine.current.ai ||
-                engine.current.isSpectating ||
-                current.frozen?.[current.current]
+                current.paused || current.state === "over"
               }
             >
               <Icon name="jump" size={46} /> JUMP
@@ -1345,3 +1351,5 @@ function Timing({ engine }) {
     </div>
   );
 }
+
+function LiveEnergy({engine,actor}){const fill=useRef(),label=useRef();useEffect(()=>{let id;const draw=()=>{const e=jumpEnergy(engine.current,actor);if(fill.current)fill.current.style.width=e.value+"%";if(label.current)label.current.textContent=e.label;id=requestAnimationFrame(draw);};id=requestAnimationFrame(draw);return()=>cancelAnimationFrame(id);},[actor]);return <div className="live-energy" aria-label="Live jump energy"><div><i ref={fill}/></div><small ref={label}>READY</small></div>;}

@@ -24,6 +24,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       "003_online_challenges.sql",
       "004_avatar_storage.sql",
       "005_progress_and_deletion.sql",
+      "006_live_updates.sql",
     ])
       await db.exec(
         await readFile(new URL("../supabase/" + file, import.meta.url), "utf8"),
@@ -40,6 +41,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
         "utf8",
       ),
     );
+    await db.exec(await readFile(new URL("../supabase/006_live_updates.sql",import.meta.url),"utf8"));
     await db.query("insert into auth.users(id) values($1),($2),($3)", [
       A,
       B,

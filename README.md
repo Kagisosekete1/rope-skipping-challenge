@@ -41,3 +41,18 @@ The five supplied Rope Rush tracks still play at 40% effective gain. A human vic
 ## Verification limits
 
 Automated tests cover game rules, cloud authorization and points escrow, progress restoration, email/profile flows, gallery processing, pip counts, 2D artwork rendering, rope timing and navigation. Native Canvas artwork was rendered and inspected. Browser/physical-phone layout and live two-device play were not available in this execution environment. The Android download is a debug-signed test APK, not a store release. See `ANDROID.md`, `ONLINE.md` and `supabase/README.md`.
+
+### Control and live-data update
+The rope has shared grip anchors, closed hands on handles, depth motion and a
+front/back sweep. Distinct background spectators walk on a marked ground path.
+Jump always accepts a tap: an idle tap starts the die and a warm-up hop; only
+legal, timed jumps score. Off-turn taps give feedback without controlling the
+opponent. Live jump-energy indicators show cooldown, readiness and Freeze.
+The die spins through changing pip faces, then settles on the server/engine roll.
+Tools is compact and sits below Round, with immediate activation feedback.
+
+Home labels cosmetic Coins separately from Online Points; rankings use the same
+online wallet as the live points badge. Leaderboards refresh every 2.5 seconds.
+Apply migration 006 for push room/wallet updates (polling also remains available).
+Gender is selected at registration, can be changed in Profile, and is private
+Auth metadata, including an explicit Prefer not to say option.

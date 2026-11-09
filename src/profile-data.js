@@ -1,3 +1,4 @@
+export const GENDERS = {female:"Female",male:"Male",non_binary:"Non-binary",prefer_not_to_say:"Prefer not to say"};
 export const AVATARS = ["pink", "blue", "yellow"];
 export function normalizeName(value) {
   return String(value ?? "")
@@ -17,6 +18,7 @@ export function localProfile(value) {
     displayName: normalizeName(value?.displayName) || "Player 1",
     avatar: AVATARS.includes(value?.avatar) ? value.avatar : "pink",
     username: value?.username || "",
+    gender: Object.hasOwn(GENDERS,value?.gender) ? value.gender : "",
     countryCode: value?.countryCode || "",
     photoPath: value?.photoPath || null,
     leaderboardVisible: value?.leaderboardVisible !== false,

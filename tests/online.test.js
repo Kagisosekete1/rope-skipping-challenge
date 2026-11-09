@@ -73,3 +73,11 @@ test("frozen server state blocks jumping and snapshots preserve the winner/pot",
   assert.equal(m.snapshot().stake, 100);
   m.close();
 });
+test('database push updates scores immediately and wallet events cannot be overwritten by stale room balances',()=>{
+ const handlers={},wallets=[];let removed=false;
+ const channel={on(_type,filter,callback){handlers[filter.table]=callback;return this;},subscribe(){return this;}};
+ const client={channel:()=>channel,removeChannel:()=>{removed=true;},rpc:async()=>({data:null,error:null})};
+ const m=new OnlineMatch(state(),client,()=>{},wallet=>wallets.push(wallet));m.connect();
+ try{handlers.challenge_wallets({new:{points:3700,freeze_tokens:2,online_wins:3,updated_at:'2026-11-09T12:00:00Z'}});handlers.challenge_rooms({new:{status:'active',state:{...state(),progress:[77,15]}}});assert.deepEqual(m.progress,[77,15]);assert.equal(wallets.at(-1).points,3700);}
+ finally{m.close();}assert.equal(removed,true);
+});

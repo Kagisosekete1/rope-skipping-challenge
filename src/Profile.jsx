@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { supabase as configuredClient } from "./supabase";
 import {
   AVATARS,
+  GENDERS,
   localProfile,
   normalizeName,
   validProfile,
@@ -75,6 +76,7 @@ export default function Profile({
         if (data) {
           const value = localProfile({
             displayName: data.display_name,
+            gender: session.user.user_metadata?.gender || draft.gender,
             avatar: data.avatar,
             username: data.username,
             countryCode: data.country_code,
@@ -95,6 +97,7 @@ export default function Profile({
   async function authenticate(e) {
     e.preventDefault();
     if (!client || busy) return;
+    if(signup && !draft.gender){setStatus("Please choose your gender, or Prefer not to say.");return;}
     setBusy(true);
     setStatus("");
     try {
@@ -110,6 +113,7 @@ export default function Profile({
               data: {
                 display_name: normalizeName(draft.displayName),
                 avatar: draft.avatar,
+                gender: draft.gender,
               },
             },
           })
@@ -147,6 +151,7 @@ export default function Profile({
     setStatus("");
     try {
       if (client && session?.user) {
+        if(value.gender && value.gender!==session.user.user_metadata?.gender){const {error}=await client.auth.updateUser({data:{gender:value.gender}});if(error)throw error;}
         const { error } = await client.from("profiles").upsert(
           {
             id: session.user.id,
@@ -273,6 +278,11 @@ export default function Profile({
           placeholder="your_name"
           autoComplete="username"
         />
+        <label htmlFor="player-gender">Gender</label>
+        <select id="player-gender" value={draft.gender} onChange={e=>setDraft(d=>({...d,gender:e.target.value}))}>
+          <option value="">Choose gender</option>{Object.entries(GENDERS).map(([value,label])=><option key={value} value={value}>{label}</option>)}
+        </select>
+        <p className="photo-help">Saved privately to your account. You can choose any crew character.</p>
         <label htmlFor="country">Country</label>
         <select
           id="country"
@@ -391,6 +401,7 @@ export default function Profile({
           <>
             <h3>{signup ? "Create your account" : "Welcome back"}</h3>
             <form className="account-form" onSubmit={authenticate}>
+              {signup && <><label htmlFor="signup-gender">Gender</label><select id="signup-gender" required value={draft.gender} onChange={e=>setDraft(d=>({...d,gender:e.target.value}))}><option value="">Choose gender</option>{Object.entries(GENDERS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></>}
               <label htmlFor="profile-email">Email</label>
               <input
                 id="profile-email"
