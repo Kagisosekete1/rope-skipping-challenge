@@ -7,7 +7,7 @@ function box(c,x,y,w,h,r,color){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle
 export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,emotion='idle',holder=0,phase=0,walk=false,robot=false,flip=false}={}){
  c.save();c.translate(x,y);c.scale(flip?-scale:scale,scale);
  const shirt=COLORS[look.outfit??kind]||COLORS[0],skin=SKIN[look.skin??(kind===1?3:2)],hair=ITEMS.hair[look.hair??0]?.color||'#402217',shoe=ITEMS.shoes[look.shoes??kind]?.color||shirt;
- const step=walk?Math.sin(time*5):0,bounce=holder?0:walk?Math.abs(step)*4:Math.sin(time*2)*2,win=emotion==='win',miss=emotion==='miss',excited=win||emotion==='happy',anticipate=emotion==='ready'?Math.sin(time*5)*.03:0;
+ const step=walk?Math.sin(time*5):0,bounce=holder?0:walk?Math.abs(step)*4:0,win=emotion==='win',miss=emotion==='miss',excited=win||emotion==='happy',anticipate=emotion==='ready'?Math.sin(time*5)*.03:0;
  c.translate(0,-jump*92-bounce);if(win)c.rotate(Math.sin(time*6)*.055);const stretch=jump>0?1+.07*Math.sin(jump*Math.PI):1+anticipate;c.scale(1/stretch,stretch);
  // Rubber-hose legs and oversized canvas sneakers.
  for(const side of [-1,1]){const sx=side*22,sy=step*side*16,knee=jump?side*18:0;
@@ -24,7 +24,7 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  // Sunny's braids sit behind her shoulders, ears and face.
  if(kind===2)for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(62+i*2),-214+i*18,10-i*.5,13,hair,INK,2.5);
  // Waving sleeves and three-finger cartoon hands.
- for(const side of [-1,1]){const hx=holder?side*74:win?side*100:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
+ for(const side of [-1,1]){const hx=holder?side*74+(side===1?Math.cos(phase)*6:0):win?side*100:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
  path(c,`M${side*35} -167 Q${side*64} -158 ${hx} ${hy-13} L${hx-side*20} ${hy+10} Q${side*43} -130 ${side*28} -132Z`,shirt);
  c.save();c.translate(hx,hy);
  if(win){c.rotate(-side*.12);c.scale(side===-1?-1:1,1);oval(c,1,-2,15,17,skin,INK,2.5);line(c,'M-5 -10 Q0 -13 5 -10 M-5 -4 Q1 -7 6 -4',INK,1.5);path(c,'M-10 5 Q-20 0 -16 -8 Q-11 -14 -6 -5 L1 1 Q3 8 -4 9Z',skin,INK,2);}
@@ -83,7 +83,7 @@ export function scenePose(engine,time,screen){
  const e=engine?.current;return {phase:screen==='gameplay'?(e?.phase||0):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
 }
 // Quadratic rope path: at the collision phase its midpoint is just above the feet.
-export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*77*s,floor+(-145+Math.sin(phase)*12)*s];}
+export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*(77+Math.cos(phase)*6)*s,floor+(-145+Math.sin(phase)*12)*s];}
 export function cartoonRope(phase,floor,scale=1){
  const start=holderGrip(130,floor,scale,false,phase),end=holderGrip(870,floor,scale,true,phase),y=start[1],cos=Math.cos(phase),mid=Math.min(floor-8,y+cos*(cos>=0?floor-y-8:360*scale)+Math.sin(phase)*25*scale);
  return {start,control:[500+Math.sin(phase)*48*scale,2*mid-y],end};
@@ -110,10 +110,10 @@ export function drawSkyTraffic(c,w,h,t){
  c.save();c.beginPath();c.rect(0,0,w,ceiling);c.clip();
  for(let i=0;i<5;i++){const x=((i*270+t*(22+i*5))%(w+240))-120,y=Math.min(ceiling-25,h*(.19+i%3*.07));c.save();c.translate(x,y);path(c,'M-71 10 Q-85 -16 -52 -22 Q-45 -57 -12 -39 Q20 -61 42 -27 Q82 -28 73 9 Q20 26 -71 10Z','#fff9e7','#668b91',2);c.restore();}
  // A small propeller plane passes well behind the court.
- c.save();c.translate(((t*42+160)%(w+280))-140,Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9);c.rotate(-.055);c.scale(.8,.8);
+ const plane=aircraftMotion('plane',t,w,h);c.save();c.translate(plane.x,plane.y);c.rotate(-.055);c.scale(plane.direction*.8,.8);
  path(c,'M-57 3 L-70 -18 L-53 -16 L-40 -3 L43 -5 Q69 -2 68 9 L-45 12Z','#fff6dc',INK,2.5);path(c,'M-8 -4 L-28 -37 L-7 -35 L21 3Z','#e89272',INK,2.5);path(c,'M1 10 L-18 34 L2 32 L27 9Z','#e89272',INK,2.5);box(c,25,-9,22,13,5,'#8bc7dc');line(c,`M70 ${-22*Math.cos(t*24)} L70 ${22*Math.cos(t*24)}`,INK,3);c.restore();
  // A friendly original helicopter, rotor and skids animated independently.
- c.save();c.translate(w+130-((t*33+620)%(w+260)),Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8);c.scale(.67,.67);
+ const heli=aircraftMotion('helicopter',t,w,h);c.save();c.translate(heli.x,heli.y);c.scale(heli.direction*.67,.67);
  path(c,'M-30 0 L-78 -14 L-83 -28 L-93 -28 L-88 0 L-33 17Z','#e9b65f',INK,3);oval(c,0,8,40,27,'#e9b65f',INK,3);path(c,'M8 -16 Q43 -9 38 14 L8 14Z','#a5dbe2',INK,2.5);line(c,'M-17 31 V42 M18 31 V42 M-34 42 H39 M0 -19 V-33',INK,3);line(c,`M${-66*Math.cos(t*32)} -35 L${66*Math.cos(t*32)} -35`,INK,4);line(c,`M-89 ${-3-13*Math.sin(t*30)} L-89 ${-3+13*Math.sin(t*30)}`,INK,3);c.restore();c.restore();
 }
 // Original rope-framed lettering: each letter has its own animated-cartoon tilt.
@@ -129,3 +129,10 @@ export function drawGameLogo(c,x,y,width=500,compact=false){
  for(const [sx,sy] of [[68,88],[434,91],[75,236],[431,236]]){path(c,`M${sx} ${sy-8} l3 6 7 2 -7 3 -3 7 -3 -7 -7 -3 7 -2Z`,'#fff5ce',INK,1.5);}
  c.restore();
 }
+
+export function drawGroundShadow(c,x,floor,scale,jump=0){
+ c.save();const shrink=1-Math.min(1,jump)*.16;
+ for(const [radius,alpha] of [[70,.04],[52,.055],[34,.075]]){c.beginPath();c.ellipse(x+7*scale,floor+12*scale,radius*scale*shrink,9*scale*shrink,0,0,Math.PI*2);c.fillStyle=`rgba(75,52,49,${alpha*(1-jump*.2)})`;c.fill();}c.restore();
+}
+
+export function aircraftMotion(type,t,w,h){const ceiling=Math.max(110,playgroundLayout(h).horizon-95);return type==='helicopter'?{x:w+130-((t*33+620)%(w+260)),y:Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8,direction:-1}:{x:((t*42+160)%(w+280))-140,y:Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9,direction:1};}

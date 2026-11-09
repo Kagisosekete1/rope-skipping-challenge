@@ -258,7 +258,6 @@ export class Match {
       return;
     }
     if (this.state === "rolling" && this.elapsed > 1.7) {
-      if(this.needed===6){this.state="idle";this.reroll=true;this.elapsed=0;this.feedback="Six! Tap the die to roll again — same turn!";this.emit();return;}
       this.state = "ready";
       this.elapsed = 0;
       this.readyStartPhase = this.phase;
@@ -343,9 +342,10 @@ export class Match {
             this.finish();
             return;
           }
-          this.state = "turnEnd";
+          this.state = this.needed===6 ? "idle" : "turnEnd";
+          this.reroll=this.needed===6;
           this.elapsed = 0;
-          this.feedback = "Challenge clear! +5% bonus";
+          this.feedback = this.reroll ? "Six jumps cleared! Bonus roll — your turn continues!" : "Challenge clear! +5% bonus";
         }
         this.aiPlan();
         this.emit();

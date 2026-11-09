@@ -6,10 +6,12 @@ import { SettingsExtras } from "./SettingsExtras";
 import { useCloudProgress } from "./useCloudProgress";
 import { useAccount } from "./useAccount";
 import { Leaderboard, OnlineLobby, photoUrl } from "./Community";
+import { characterKind } from "./profile-data";
 import { jumpTap, jumpEnergy } from "./controls";
 import { OnlineMatch } from "./online";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
 import { tone, music, unlockMusic, playVictory, stopVictory } from "./audio";
+const BRAND_LOGO_URL=new URL("./assets/rope-skipping-logo.png",import.meta.url).href;
 function Icon({ name, size = 26 }) {
   const paths = {
     back: "m15 5-7 7 7 7",
@@ -88,7 +90,7 @@ export default function App({ splashDelay = 1800 }) {
   const [pendingPower,setPendingPower] = useState(null),[tapPulse,setTapPulse]=useState(0);
   const [toolActor, setToolActor] = useState(0),
     [buyingFreeze, setBuyingFreeze] = useState(false);
-  const [photoFailed,setPhotoFailed]=useState(false);
+  const [photoFailed,setPhotoFailed]=useState(false),[logoFailed,setLogoFailed]=useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), splashDelay);
@@ -567,7 +569,7 @@ export default function App({ splashDelay = 1800 }) {
             <div className="balance-stack"><button className="wallet" onClick={() => go("shop")} aria-label="Cosmetic coins"><Coin /><span>{save.coins.toLocaleString()}<small>COINS · SHOP</small></span><Icon name="plus" /></button><button className="online-points-badge" onClick={()=>go("leaderboard")}><b>{account.user ? account.wallet ? Number(account.wallet.points).toLocaleString() : "…" : "SIGN IN"}</b><small>ONLINE POINTS · RANKS</small></button></div>
           </div>
           <div className="home-logo">
-            <img className="brand-logo" src={import.meta.env.BASE_URL+"branding/rope-skipping-logo.png"} alt="Rope Skipping Challenge — rope-framed cartoon logo"/>
+            {logoFailed?<h1 className="brand-fallback">ROPE SKIPPING<br/>CHALLENGE</h1>:<img className="brand-logo" src={BRAND_LOGO_URL} width="1000" height="540" fetchPriority="high" onError={()=>setLogoFailed(true)} alt="Rope Skipping Challenge — rope-framed cartoon logo"/>}
             <p>A little rhythm. A whole lot of joy.</p>
           </div>
           <section className="home-actions">
@@ -583,7 +585,7 @@ export default function App({ splashDelay = 1800 }) {
             <Button
               variant="blue"
               onClick={() => {
-                chooseCharacter(0);
+                chooseCharacter(characterKind(save.profile));
                 go("customize");
               }}
             >
@@ -815,7 +817,7 @@ export default function App({ splashDelay = 1800 }) {
               <Icon name="jump" size={36} />
               <strong>
                 {current.done}
-                <small>/ {current.reroll ? "–" : current.needed || "–"}</small>
+                <small>/ {current.needed || "–"}</small>
               </strong>
               <span>Jumps</span>
             </div>
@@ -840,7 +842,7 @@ export default function App({ splashDelay = 1800 }) {
                   className="roll-button"
                 >
                   {current.state === "idle"
-                    ? current.reroll ? "Six! Roll again" : "Roll the dice"
+                    ? current.reroll ? "Bonus roll!" : "Roll the dice"
                     : current.state === "rolling"
                       ? "Rolling…"
                       : current.state === "ready"

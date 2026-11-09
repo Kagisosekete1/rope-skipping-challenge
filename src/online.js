@@ -47,6 +47,7 @@ export class OnlineMatch {
     this.roomId = data.room_id;
     this.stake = Number(data.stake);
     this.names = data.names;
+    this.avatars = data.avatars;
     if(data.wallet)this.onWallet?.(data.wallet);
     this.tick(0);
     this.emit();
@@ -73,6 +74,7 @@ export class OnlineMatch {
       mySlot: this.mySlot,
       stake: this.stake,
       names: this.names,
+      avatars: this.avatars,
       connectionLost: this.connectionLost,
     };
   }

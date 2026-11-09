@@ -6,6 +6,7 @@ import { supabase as configuredClient } from "./supabase";
 import {
   AVATARS,
   GENDERS,
+  withGender,
   localProfile,
   normalizeName,
   validProfile,
@@ -138,7 +139,7 @@ export default function Profile({
   }
   async function save(e) {
     e.preventDefault();
-    const value = { ...draft, displayName: normalizeName(draft.displayName) };
+    const value = localProfile({ ...draft, displayName: normalizeName(draft.displayName) });
     if (!validProfile(value)) {
       setStatus("Choose a name with 2–24 characters and a crew avatar.");
       return;
@@ -280,10 +281,10 @@ export default function Profile({
           autoComplete="username"
         />
         <label htmlFor="player-gender">Gender</label>
-        <select id="player-gender" value={draft.gender} onChange={e=>setDraft(d=>({...d,gender:e.target.value}))}>
+        <select id="player-gender" value={draft.gender} onChange={e=>setDraft(d=>withGender(d,e.target.value))}>
           <option value="">Choose gender</option>{Object.entries(GENDERS).map(([value,label])=><option key={value} value={value}>{label}</option>)}
         </select>
-        <p className="photo-help">Saved privately to your account. You can choose any crew character.</p>
+        <p className="photo-help">Male selects Ziggy; female selects Poppy or Sunny. You can change your gender and compatible avatar here. Gender stays private.</p>
         <label htmlFor="country">Country</label>
         <select
           id="country"
@@ -362,6 +363,7 @@ export default function Profile({
               type="button"
               key={avatar}
               className={draft.avatar === avatar ? "selected" : ""}
+              disabled={busy || (draft.gender==="male" && avatar!=="blue") || (draft.gender==="female" && avatar==="blue")}
               aria-label={`${avatar} profile avatar`}
               aria-pressed={draft.avatar === avatar}
               style={{ "--avatar": ["#fc278b", "#087ff6", "#ffcb13"][i] }}
@@ -402,7 +404,7 @@ export default function Profile({
           <>
             <h3>{signup ? "Create your account" : "Welcome back"}</h3>
             <form className="account-form" onSubmit={authenticate}>
-              {signup && <><label htmlFor="signup-gender">Gender</label><select id="signup-gender" required value={draft.gender} onChange={e=>setDraft(d=>({...d,gender:e.target.value}))}><option value="">Choose gender</option>{Object.entries(GENDERS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></>}
+              {signup && <><label htmlFor="signup-gender">Gender</label><select id="signup-gender" required value={draft.gender} onChange={e=>setDraft(d=>withGender(d,e.target.value))}><option value="">Choose gender</option>{Object.entries(GENDERS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></>}
               <label htmlFor="profile-email">Email</label>
               <input
                 id="profile-email"

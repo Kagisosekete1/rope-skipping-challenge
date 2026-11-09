@@ -16,7 +16,7 @@ export function validProfile(profile) {
 export function localProfile(value) {
   return {
     displayName: normalizeName(value?.displayName) || "Player 1",
-    avatar: AVATARS.includes(value?.avatar) ? value.avatar : "pink",
+    avatar: avatarForGender(value?.gender,value?.avatar),
     username: value?.username || "",
     gender: Object.hasOwn(GENDERS,value?.gender) ? value.gender : "",
     countryCode: value?.countryCode || "",
@@ -35,3 +35,11 @@ export function isPublicSupabaseKey(value) {
     return false;
   }
 }
+
+export function avatarForGender(gender,avatar='pink'){
+ if(gender==='male')return 'blue';
+ if(gender==='female')return avatar==='yellow'?'yellow':'pink';
+ return AVATARS.includes(avatar)?avatar:'pink';
+}
+export function characterKind(profile){return AVATARS.indexOf(avatarForGender(profile?.gender,profile?.avatar));}
+export function withGender(profile,gender){return {...profile,gender,avatar:avatarForGender(gender,profile.avatar)};}

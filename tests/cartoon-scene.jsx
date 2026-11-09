@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createCanvas,Path2D,GlobalFonts} from '@napi-rs/canvas';
-import {drawCharacter,drawBackground,scenePose} from '../src/cartoon-art';
+import {drawCharacter,drawBackground,scenePose,aircraftMotion} from '../src/cartoon-art';
 import ItemArt from '../src/ItemArt';
+import {ropeFrame,drawRopeLayer,bodyDepthAt} from '../src/rope-motion';
 import {CartoonDie} from '../src/CartoonScene';
 import {Match,defaultSave} from '../src/game';
 globalThis.Path2D=Path2D;GlobalFonts.registerFromPath('public/fonts/nunito-900.ttf','Nunito');
@@ -23,4 +24,15 @@ test('2D rope and jumper read the existing authoritative timing without modifyin
 test('customization uses standalone SVG artwork and visibly changes every skin, hair and hairstyle selection',()=>{
  for(const category of ['skin','hair','style']){const options=category==='skin'?5:3;const outputs=new Set();for(let index=0;index<options;index++){const markup=renderToStaticMarkup(<ItemArt category={category} index={index} look={{hair:0,skin:2}}/>);assert.match(markup,/role="img"/);assert.match(markup,/<path/);assert.equal(markup.includes('<canvas'),false);outputs.add(markup);}assert.equal(outputs.size,options);}
  for(const category of ['outfit','shoes','rope']){const first=renderToStaticMarkup(<ItemArt category={category} item={{color:'#ff4488'}}/>),second=renderToStaticMarkup(<ItemArt category={category} item={{color:'#3366ee'}}/>);assert.notEqual(first,second);assert.match(first,/#ff4488/);}
+});
+
+test('back rope is hidden by the actual boy silhouette, while the front pass remains visible',()=>{
+ const boy=createCanvas(1000,1000),bc=boy.getContext('2d');drawCharacter(bc,{x:500,y:900,kind:1,scale:1,time:2});
+ const body=bc.getImageData(0,0,1000,1000).data;
+ const render=phase=>{const image=createCanvas(1000,1000),c=image.getContext('2d'),nodes=ropeFrame(phase,{floor:900,scale:1,kind:1});c.fillStyle='#fff';c.fillRect(0,0,1000,1000);drawRopeLayer(c,nodes,false,'#ffd128');c.drawImage(boy,0,0);drawRopeLayer(c,nodes,true,'#ffd128');return {nodes,pixels:c.getImageData(0,0,1000,1000).data};};
+ for(const [phase,back] of [[Math.PI*1.5,true],[Math.PI*.5,false]]){const {nodes,pixels}=render(phase),overlap=nodes.filter(p=>{const k=(Math.round(p.y)*1000+Math.round(p.x))*4;return body[k+3]===255&&Math.abs(p.z)>10;});assert.ok(overlap.length>0);for(const p of overlap){const k=(Math.round(p.y)*1000+Math.round(p.x))*4;if(back)assert.deepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);else assert.notDeepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);}}
+});
+test('rope depth clears the moving body envelope, and aircraft point in their travel direction',()=>{
+ for(const kind of [0,1,2])for(const jump of [0,.8])for(let i=0;i<36;i++){const nodes=ropeFrame(i*Math.PI/18,{floor:900,scale:1,kind,jump});for(const p of nodes){const depth=bodyDepthAt(p.wx,p.wy,{floor:900,scale:1,kind,jump});if(depth>0)assert.ok(Math.abs(p.z)>=depth+5.99);}}
+ for(const type of ['plane','helicopter']){const a=aircraftMotion(type,4,1000,2000),b=aircraftMotion(type,5,1000,2000);assert.equal(Math.sign(b.x-a.x),a.direction);}
 });

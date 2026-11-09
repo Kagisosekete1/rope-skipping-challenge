@@ -26,6 +26,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       "005_progress_and_deletion.sql",
       "006_live_updates.sql",
       "007_six_roll_again.sql",
+      "008_six_jumps_and_cast.sql",
     ])
       await db.exec(
         await readFile(new URL("../supabase/" + file, import.meta.url), "utf8"),
@@ -44,6 +45,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
     );
     await db.exec(await readFile(new URL("../supabase/006_live_updates.sql",import.meta.url),"utf8"));
     await db.exec(await readFile(new URL("../supabase/007_six_roll_again.sql",import.meta.url),"utf8"));
+    await db.exec(await readFile(new URL("../supabase/008_six_jumps_and_cast.sql",import.meta.url),"utf8"));
     await db.query("insert into auth.users(id) values($1),($2),($3)", [
       A,
       B,
@@ -144,7 +146,11 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
     await db.query("update public.challenge_rooms set state=state||jsonb_build_object('state','rolling','needed',6,'deadline',extract(epoch from clock_timestamp())*1000-1) where id=$1",[id]);
     await as(A);
     const six=await rpc("select public.challenge_action($1,'poll',gen_random_uuid()) as result",[id]);
-    assert.equal(six.state,'idle');assert.equal(six.reroll,true);assert.equal(six.current,0);assert.deepEqual(six.progress,[0,0]);assert.equal(six.wallet.points,950);
+    assert.equal(six.state,'ready');assert.equal(six.needed,6);assert.equal(six.reroll,false);assert.equal(six.current,0);assert.deepEqual(six.progress,[0,0]);assert.equal(six.wallet.points,950);assert.equal(six.avatars.length,2);
+    await admin();
+    await db.query("update public.challenge_rooms set state=state||jsonb_build_object('state','skipping','needed',6,'done',5,'progress',jsonb_build_array(30,0),'jump_at',extract(epoch from clock_timestamp())*1000-380,'next_crossing',extract(epoch from clock_timestamp())*1000-1) where id=$1",[id]);
+    await as(A);const bonus=await rpc("select public.challenge_action($1,'poll',gen_random_uuid()) as result",[id]);assert.equal(bonus.state,'idle');assert.equal(bonus.done,6);assert.equal(bonus.reroll,true);assert.equal(bonus.current,0);assert.equal(bonus.progress[0],42);assert.equal(bonus.wallet.points,950);
+
     await rpc("select public.challenge_action($1,'roll',gen_random_uuid()) as result",[id]);
     await admin();
     await db.query(

@@ -203,7 +203,9 @@ test("paid Freeze can target BeatBot and player two; Block counters it", () => {
   assert.equal(p.frozenUntil[1], 1.5);
 });
 
-test('six requires an explicit same-turn reroll and awards no progress',()=>{
- const numbers=[.99,.25],m=new Match(()=>{},()=>numbers.shift()??.25);m.roll();advance(m,1.75);assert.equal(m.needed,6);assert.equal(m.state,'idle');assert.equal(m.reroll,true);assert.equal(m.current,0);assert.deepEqual(m.progress,[0,0]);m.roll();assert.equal(m.reroll,false);advance(m,3.2);assert.equal(m.state,'skipping');assert.equal(m.needed,2);
+test('six plays six jumps, then grants the same player another roll only after clearing all six',()=>{
+ const numbers=[.99,.25],m=new Match(()=>{},()=>numbers.shift()??.25);m.roll();advance(m,3.2);assert.equal(m.needed,6);assert.equal(m.state,'skipping');assert.equal(m.reroll,false);
+ for(let n=1;n<=6;n++){land(m);assert.equal(m.done,n);if(n<6){assert.equal(m.state,'skipping');assert.equal(m.reroll,false);}}
+ assert.equal(m.current,0);assert.equal(m.state,'idle');assert.equal(m.reroll,true);assert.equal(m.progress[0],47);m.roll();assert.equal(m.reroll,false);advance(m,3.2);assert.equal(m.state,'skipping');assert.equal(m.needed,2);
 });
 test('Normal and Hard BeatBot use only their own limited Shield and Boost',()=>{const m=new Match(()=>{},()=>.5);m.current=1;m.state='skipping';m.progress[1]=65;m.aiPlan();assert.equal(m.powers[1].boost,0);assert.equal(m.powers[1].shield,0);assert.equal(m.effects[1].boost,true);assert.equal(m.effects[1].shield,true);assert.equal(m.powers[0].boost,1);});

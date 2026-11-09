@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabase";
 import { localProfile } from "./profile-data.js";
 export function useAccount() {
-  const activeUser=useRef(null),walletBusy=useRef(false);
+  const activeUser=useRef(null),walletBusy=useRef(false),reloadSequence=useRef(0);
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState(null),
     [wallet, rawSetWallet] = useState(null),
@@ -27,8 +27,9 @@ export function useAccount() {
   }, []);
   const reload = useCallback(async () => {
     if (!supabase || !user) return;
+    const sequence=++reloadSequence.current;
     const { data, error } = await supabase.rpc("get_my_points");
-    if(activeUser.current!==user.id)return;
+    if(activeUser.current!==user.id||sequence!==reloadSequence.current)return;
     if (error) {
       setError("Online features are being updated. Try again shortly.");
       return;
@@ -42,10 +43,10 @@ export function useAccount() {
       )
       .eq("id", user.id)
       .maybeSingle();
+    if(activeUser.current!==user.id||sequence!==reloadSequence.current)return;
     if (result.data) {
       const p = result.data;
-      setProfile(
-        localProfile({
+      const normalized=localProfile({
           displayName: p.display_name,
           gender: user.user_metadata?.gender,
           avatar: p.avatar,
@@ -53,8 +54,9 @@ export function useAccount() {
           countryCode: p.country_code,
           photoPath: p.photo_path,
           leaderboardVisible: p.leaderboard_visible,
-        }),
-      );
+        });
+      setProfile(normalized);
+      if(normalized.avatar!==p.avatar)await supabase.from("profiles").update({avatar:normalized.avatar}).eq("id",user.id);
     }
     return data;
   }, [user?.id,user?.user_metadata?.gender]);

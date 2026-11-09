@@ -112,6 +112,12 @@ test("email signup, verification notice, sign-in, own profile save and sign-out 
     assert.match(document.querySelector(".photo-message").textContent,/Sign in below/);
     assert.equal(signedUp,null,"photo chooser never submits account forms");
     await click(button("New to the playground? Create an account"));
+    await act(async()=>{const select=document.getElementById("signup-gender");select.value="male";select.dispatchEvent(new window.Event("change",{bubbles:true}));});
+    assert.equal(document.querySelector('[aria-label="blue profile avatar"]').getAttribute('aria-pressed'),'true');
+    assert.equal(document.querySelector('[aria-label="pink profile avatar"]').disabled,true);
+    await act(async()=>{const select=document.getElementById("signup-gender");select.value="female";select.dispatchEvent(new window.Event("change",{bubbles:true}));});
+    assert.equal(document.querySelector('[aria-label="pink profile avatar"]').getAttribute('aria-pressed'),'true');
+    assert.equal(document.querySelector('[aria-label="blue profile avatar"]').disabled,true);
     await fill("profile-email", user.email);
     await fill("profile-password", "sample-password-123");
     await act(async()=>{const select=document.getElementById("signup-gender");select.value="female";select.dispatchEvent(new window.Event("change",{bubbles:true}));});

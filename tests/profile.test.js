@@ -5,6 +5,7 @@ import {
   validProfile,
   localProfile,
   isPublicSupabaseKey,
+  withGender,characterKind,
 } from "../src/profile-data.js";
 test("profile names normalize spacing and enforce the published limits", () => {
   assert.equal(normalizeName("  MoFunk   Crew "), "MoFunk Crew");
@@ -27,3 +28,5 @@ test("only publishable or anon client keys are accepted", () => {
   assert.equal(isPublicSupabaseKey("sb_secret_example"), false);
   assert.equal(isPublicSupabaseKey("a random database password"), false);
 });
+
+test('gender switches the actual playing avatar immediately and can be changed again',()=>{const male=localProfile(withGender({avatar:'pink',displayName:'Player'},'male'));assert.equal(male.avatar,'blue');assert.equal(characterKind(male),1);const female=localProfile(withGender(male,'female'));assert.equal(female.avatar,'pink');assert.equal(characterKind(female),0);assert.equal(characterKind({gender:'female',avatar:'yellow'}),2);assert.equal(localProfile({gender:'male',avatar:'yellow'}).avatar,'blue');});

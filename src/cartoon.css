@@ -331,3 +331,13 @@ em { color:#d54f6e; }
 .app .reward-summary { background:transparent; border:0; padding:0; }
 .app .reward-summary>span { flex:1; min-width:88px; padding:9px; border:1px solid #26313b; border-radius:12px; background:#fff3cd; }
 .app .reward-summary>svg { color:#b37e26; }
+/* Home's wordmark is a real layout row, using the same asset as the icon. */
+.app .home { display:flex; flex-direction:column; min-height:0; }
+.app .home-top { flex:none; align-items:flex-start; }
+.app .home-logo { position:relative; top:auto; left:auto; right:auto; transform:none; width:min(520px,90%); margin:0 auto; flex:none; z-index:1; }
+.app .home-logo .brand-logo { display:block; width:100%; height:clamp(120px,25dvh,230px); object-fit:contain; }
+.app .brand-fallback { font-size:clamp(27px,6vw,48px); line-height:1.1; text-align:center; color:#ffe279; -webkit-text-stroke:1px #26313b; }
+.app .home-actions { max-width:calc(100% - 28px); }
+.app .home-actions>.button { max-width:100%; white-space:normal; text-align:center; }
+.app .profile-avatars button:disabled { background:#e6e7dc; border-style:dashed; }
+@media(max-height:650px){.app .home-top{padding:8px 14px}.app .home-logo{width:min(340px,72%)}.app .home-logo .brand-logo{height:105px}.app .home-logo p{font-size:10px}.app .home-actions{gap:8px;bottom:94px}.app .home-actions .button{min-height:43px;font-size:14px;padding:7px 15px}.app .home-actions .play-big{font-size:24px}}

@@ -80,8 +80,18 @@ The rope-framed original wordmark is shared by Home, Welcome, court signage,
 PWA branding and Android launcher artwork. Native review frames include the
 384×844 and 576×1280 phone proportions supplied in feedback.
 
-A six grants a free same-turn reroll with no score. Tap the die or Roll Again;
-BeatBot rerolls on its turn. Apply `007_six_roll_again.sql` for the online server
-rule. Previous migrations must remain applied. Normal/Hard BeatBot has improved
+A six requires six successful jumps, then grants a bonus roll on the same turn.
+Apply `008_six_jumps_and_cast.sql` after 007 for the corrected online rule.
+Normal/Hard BeatBot has improved
 but fallible timing and can spend its own existing Shield/Boost once per match.
 Solo rope speed increases modestly with level, with a safe minimum period.
+
+### Body-aware rope and profile cast (3.2.0)
+The rope is sampled in depth around the animated body and hair envelope, with
+rear segments drawn behind the actual jumper and front segments ahead. Held
+handles share the same wrist motion. Ground contact shadows anchor the cast.
+Male profiles use the boy; female profiles use either girl. Online snapshots
+include public avatars without exposing private gender metadata. Home loads the
+same original wordmark as the launcher through a bundled, hashed asset.
+Android builds produce an update-compatible test APK and an unsigned release
+AAB. See ANDROID.md for production signing and Play Console requirements.

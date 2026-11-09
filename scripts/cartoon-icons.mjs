@@ -6,7 +6,7 @@ await build({entryPoints:['src/cartoon-art.js'],outfile:'.test-tmp/icon-art.mjs'
 globalThis.Path2D=Path2D;GlobalFonts.registerFromPath('public/fonts/nunito-900.ttf','Nunito');
 const {drawCharacter,drawGameLogo}=await import('../.test-tmp/icon-art.mjs');
 await mkdir('public/branding',{recursive:true});
-const logo=createCanvas(1000,540);drawGameLogo(logo.getContext('2d'),0,0,1000);await writeFile('public/branding/rope-skipping-logo.png',logo.toBuffer('image/png'));
+const logo=createCanvas(1000,540);drawGameLogo(logo.getContext('2d'),0,0,1000);await writeFile('public/branding/rope-skipping-logo.png',logo.toBuffer('image/png'));await mkdir('src/assets',{recursive:true});await writeFile('src/assets/rope-skipping-logo.png',logo.toBuffer('image/png'));
 const master=createCanvas(1024,1024),c=master.getContext('2d');c.fillStyle='#a4dfdb';c.fillRect(0,0,1024,1024);c.fillStyle='#ffe9aa';c.beginPath();c.roundRect(35,35,954,954,130);c.fill();c.strokeStyle='#26313b';c.lineWidth=12;c.stroke();
 c.save();c.beginPath();c.roundRect(42,42,940,940,125);c.clip();c.fillStyle='#7dccca';c.fillRect(42,580,940,410);drawCharacter(c,{x:530,y:1070,scale:1.5,kind:0,time:2,emotion:'happy',look:{skin:2,outfit:0,hair:0,shoes:0}});c.restore();
 drawGameLogo(c,30,64,964);

@@ -39,3 +39,8 @@ Payouts, purchases and refunds are transaction-locked and idempotent. Clients ca
 ## Validation
 
 Tests exercise the real migration functions in embedded PostgreSQL using Supabase Auth/role/storage fixtures: cross-account isolation, avatar path ownership, private wallet mutation rejection, duplicate requests, invitation acceptance, server scoring, winner-takes-all payout and refunds. DOM tests check stake consent and invitation creation. Two simultaneously signed-in physical phones have not been manually played together in this environment.
+
+## Six and avatars (3.2.0)
+Apply migration 008 after 007. Rolling six requires six jumps; clearing all six
+grants the same player another roll. Public avatar snapshots keep the opponent
+character consistent across devices without exposing gender metadata.

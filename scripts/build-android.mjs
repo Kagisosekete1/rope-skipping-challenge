@@ -36,7 +36,7 @@ if (!existsSync("android/debug.keystore"))
   );
 run(
   win ? "gradlew.bat" : "./gradlew",
-  ["assembleDebug", "--no-daemon", "--console=plain"],
+  ["assembleDebug", "bundleRelease", "--no-daemon", "--console=plain"],
   { cwd: "android" },
 );
 await mkdir("public/downloads", { recursive: true });
@@ -49,3 +49,8 @@ await writeFile(
     "  Rope-Skipping-Challenge-test.apk\n",
 );
 console.log("Android test APK ready:", path, "(" + bytes.length + " bytes)");
+
+const bundle="public/downloads/Rope-Skipping-Challenge-release-unsigned.aab";
+await copyFile("android/app/build/outputs/bundle/release/app-release.aab",bundle);
+const bundleBytes=await readFile(bundle);await writeFile(bundle+".sha256",createHash("sha256").update(bundleBytes).digest("hex")+"  Rope-Skipping-Challenge-release-unsigned.aab\n");
+console.log("Unsigned release AAB prepared:",bundle,"— sign with your own upload key before Play Store submission.");
