@@ -65,3 +65,8 @@ coloured irises and freckles. App-wide drop shadows, text shadows and glow are
 removed. Dark text sits on light surfaces, form fonts are larger and item rows
 scroll to keep the drawings usable on phones. The gameplay header measures its
 actual height so long names do not overlap Round, Tools and feedback.
+
+Home shows the player's gallery photo (or chosen crew avatar), and the Home
+wordmark is the owner's requested exception to the shadow-free UI. Gameplay
+uses a smaller dice dock/roll button and keeps Tools directly above the jump
+counter on the left. Sunny's braids are drawn behind her shoulders and face.

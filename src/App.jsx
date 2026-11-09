@@ -5,7 +5,7 @@ import Profile from "./Profile";
 import { SettingsExtras } from "./SettingsExtras";
 import { useCloudProgress } from "./useCloudProgress";
 import { useAccount } from "./useAccount";
-import { Leaderboard, OnlineLobby } from "./Community";
+import { Leaderboard, OnlineLobby, photoUrl } from "./Community";
 import { jumpTap, jumpEnergy } from "./controls";
 import { OnlineMatch } from "./online";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
@@ -88,6 +88,7 @@ export default function App({ splashDelay = 1800 }) {
   const [pendingPower,setPendingPower] = useState(null),[tapPulse,setTapPulse]=useState(0);
   const [toolActor, setToolActor] = useState(0),
     [buyingFreeze, setBuyingFreeze] = useState(false);
+  const [photoFailed,setPhotoFailed]=useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), splashDelay);
@@ -115,6 +116,7 @@ export default function App({ splashDelay = 1800 }) {
     [toast, setToast] = useState(""),
     [reward, setReward] = useState(null);
   const cloud = useCloudProgress(account, save, setSave);
+  useEffect(()=>setPhotoFailed(false),[save.profile.photoPath]);
   const engine = useRef(null),
     root = useRef(),
     screenRef = useRef(screen),
@@ -554,7 +556,7 @@ export default function App({ splashDelay = 1800 }) {
               onClick={() => go("profile")}
               aria-label="Your profile"
             >
-              <Icon name="face" />
+              {save.profile.photoPath && !photoFailed && photoUrl(save.profile.photoPath) ? <img className="home-profile-photo" src={photoUrl(save.profile.photoPath)} alt="Your profile photo" onError={()=>setPhotoFailed(true)}/> : <CartoonPreview portrait kind={Math.max(0,["pink","blue","yellow"].indexOf(save.profile.avatar))} look={save.looks[Math.max(0,["pink","blue","yellow"].indexOf(save.profile.avatar))]} className="home-profile-photo"/>}
               <span>
                 <b>{save.profile.displayName}</b>
                 <small>
@@ -733,7 +735,6 @@ export default function App({ splashDelay = 1800 }) {
           >
             {current.feedback}
           </div>
-          <button className="tools-toggle button blue" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)}>{toolsOpen ? "CLOSE TOOLS" : "⚡ TOOLS"}</button>
           <div className={"powerup-bar " + (toolsOpen ? "tools-open" : "tools-closed")}>
             {current.mode === "pvp" && (
               <div className="tool-actor">
@@ -809,6 +810,8 @@ export default function App({ splashDelay = 1800 }) {
             </span>
           </div>
           <div className="game-controls">
+            <div className="left-control-stack">
+          <button className="tools-toggle button blue" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)}>{toolsOpen ? "× TOOLS" : "⚡ TOOLS"}</button>
             <div className="jump-count glass">
               <Icon name="jump" size={36} />
               <strong>
@@ -816,6 +819,7 @@ export default function App({ splashDelay = 1800 }) {
                 <small>/ {current.needed || "–"}</small>
               </strong>
               <span>Jumps</span>
+            </div>
             </div>
             <div className="center-control">
               {current.state === "skipping" ? (

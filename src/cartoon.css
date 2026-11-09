@@ -302,3 +302,18 @@ em { color:#d54f6e; }
 .app .rank-points { max-width:110px; overflow-wrap:anywhere; font-size:clamp(14px,3.8vw,22px); }
 .app .leaderboard-row small { font-size:11px; line-height:1.3; }
 .app button:disabled span,.app button:disabled .item-caption { color:#52616a; }
+/* Requested Home-title exception: keep the rest of the app shadow-free. */
+.app .home-logo span { text-shadow:3px 5px 0 #26313b !important; }
+.app .home-logo strong { text-shadow:1px 2px 0 #f6d996 !important; box-shadow:3px 4px 0 #26313b !important; }
+.home-profile-photo { width:46px; height:46px; object-fit:cover; flex-shrink:0; border:2px solid #26313b; border-radius:50%; background:#fff6dc; }
+.left-control-stack { display:flex; flex-direction:column; gap:9px; align-items:stretch; flex-shrink:0; }
+.app .left-control-stack .tools-toggle { position:static; top:auto; bottom:auto; left:auto; right:auto; transform:none; width:100%; min-height:29px; padding:5px 8px; font-size:10px; border-radius:12px; }
+.app .left-control-stack .tools-toggle:active { transform:scale(.96); }
+.app .powerup-bar.tools-open { top:auto; bottom:calc(200px + env(safe-area-inset-bottom,0px)) !important; left:3%; right:auto; width:min(420px,94%); margin:0; }
+.app .dice-showcase.cartoon-die { width:64px !important; height:80px !important; }
+.app .cartoon-die svg { width:64px; height:64px; }
+.app .cartoon-die span { font-size:8px; }
+@media(max-width:750px){.home-profile-photo{width:41px;height:41px}.app .dice-showcase.cartoon-die{width:60px!important;height:75px!important}.app .cartoon-die svg{width:60px;height:60px}.left-control-stack{gap:7px}}
+@media(max-height:650px){.app .dice-showcase.cartoon-die{width:52px!important;height:66px!important}.app .cartoon-die svg{width:52px;height:52px}.app .powerup-bar.tools-open{bottom:calc(170px + env(safe-area-inset-bottom,0px)) !important}}
+.app .roll-button { min-height:47px; max-width:230px; padding:8px 10px; font-size:clamp(12px,1.8vw,20px); }
+.app .cartoon-die span { font-size:9px; }

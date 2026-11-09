@@ -4,7 +4,7 @@ const ink='#26313b';
 function Portrait({skin,hair,style=0,kind=0}){
  return <>
  {kind===0&&(style===0?<path d="M60 49 C26 2 3 35 19 59 C-5 80 20 110 46 91 C16 76 56 71 60 49Z" fill={hair}/>:style===1?<path d="M64 45 C41 11 89 -9 108 19 Q121 40 97 48Z" fill={hair}/>:<><circle cx="38" cy="50" r="28" fill={hair}/><circle cx="139" cy="51" r="27" fill={hair}/></>)}
- {kind===2&&[-1,1].map(side=>[0,1,2].map(n=><ellipse key={side+':'+n} cx={90+side*45} cy={105+n*12} rx="9" ry="11" fill={hair}/>))}
+ {kind===2&&[-1,1].map(side=>[0,1,2].map(n=><ellipse key={side+':'+n} cx={90+side*54} cy={112+n*11} rx="9" ry="11" fill={hair}/>))}
  <ellipse cx="49" cy="84" rx="12" ry="16" fill={skin}/><ellipse cx="132" cy="84" rx="12" ry="16" fill={skin}/>
  <path d="M51 51 Q83 21 119 50 Q140 74 129 106 Q118 133 87 133 Q54 130 49 103 Q38 80 51 51Z" fill={skin}/>
  <path d="M47 82 C20 45 62 17 91 28 C125 17 147 47 133 81 L121 67 Q108 70 100 49 Q85 77 67 59 L53 82Z" fill={hair}/>

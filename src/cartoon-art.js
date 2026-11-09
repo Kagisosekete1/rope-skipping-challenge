@@ -21,6 +21,8 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
   for(const side of [-1,1]){oval(c,side*25,-238,12,excited?18:14,'#b5ff77',null);line(c,`M${side*25-7} -239 l7 -7 7 7`,'#26394d',3);}
   line(c,'M-16 -216 Q0 -202 16 -216','#b5ff77',4);line(c,'M0 -277 L0 -300',INK,5);oval(c,0,-306,9,9,'#f76d91');oval(c,0,-129,22,22,'#fff8e6');line(c,'M-8 -135 L0 -144 0 -116 M-8 -116 L8 -116',INK,4);
  }else{
+ // Sunny's braids sit behind her shoulders, ears and face.
+ if(kind===2)for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(62+i*2),-214+i*18,10-i*.5,13,hair,INK,2.5);
  // Waving sleeves and three-finger cartoon hands.
  for(const side of [-1,1]){const hx=holder?side*74:win?side*90:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?-226:-111-jump*35+(walk?step*side*12:0);
  path(c,`M${side*35} -167 Q${side*64} -158 ${hx} ${hy-13} L${hx-side*20} ${hy+10} Q${side*43} -130 ${side*28} -132Z`,shirt);
@@ -39,7 +41,7 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  path(c,'M-56 -247 C-76 -283 -51 -316 -15 -312 C9 -330 42 -310 49 -292 C70 -285 67 -258 58 -246 L44 -264 Q24 -263 17 -283 C2 -258 -12 -261 -21 -275 Q-31 -249 -48 -262Z',hair);
  line(c,'M-49 -278 Q-29 -301 -9 -293 M0 -303 Q29 -299 43 -277','#98704e',2);
  if(kind===1){for(let i=0;i<6;i++)oval(c,-48+i*19,-294-Math.sin(i)*7,15,18,hair);}
- if(kind===2){for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(48+i*3),-203+i*17,12-i,14,hair,INK,3);path(c,'M-62 -284 Q-35 -334 24 -315 Q53 -310 55 -278Z','#ffd749');path(c,'M-63 -283 Q-9 -298 70 -281 Q87 -262 59 -267 L-58 -272Z','#ffd749');}
+ if(kind===2){path(c,'M-62 -284 Q-35 -334 24 -315 Q53 -310 55 -278Z','#ffd749');path(c,'M-63 -283 Q-9 -298 70 -281 Q87 -262 59 -267 L-58 -272Z','#ffd749');}
  if(kind===0&&look.style!==1){oval(c,-43,-289,13,9,shirt);line(c,'M-52 -286 L-35 -294','#fff8e6',3);}
  // Large expressive eyes, animated pupils and brows.
  const blink=time%4.1<.13&&!excited,eyeY=miss?-225:-235;
