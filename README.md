@@ -95,3 +95,9 @@ include public avatars without exposing private gender metadata. Home loads the
 same original wordmark as the launcher through a bundled, hashed asset.
 Android builds produce an update-compatible test APK and an unsigned release
 AAB. See ANDROID.md for production signing and Play Console requirements.
+
+### Continuous rotation and mechanical BeatBot (3.2.1)
+Holders raise their anchored hands so a continuous elliptical rope sweep clears
+both feet and hair. Rear and front segments use depth order without snapping
+the rope to a body envelope. BeatBot has metal piston legs, knee hubs and robot
+feet, with no human sneakers. The helicopter now travels nose-first to the right.

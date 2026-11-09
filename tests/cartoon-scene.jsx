@@ -30,9 +30,16 @@ test('back rope is hidden by the actual boy silhouette, while the front pass rem
  const boy=createCanvas(1000,1000),bc=boy.getContext('2d');drawCharacter(bc,{x:500,y:900,kind:1,scale:1,time:2});
  const body=bc.getImageData(0,0,1000,1000).data;
  const render=phase=>{const image=createCanvas(1000,1000),c=image.getContext('2d'),nodes=ropeFrame(phase,{floor:900,scale:1,kind:1});c.fillStyle='#fff';c.fillRect(0,0,1000,1000);drawRopeLayer(c,nodes,false,'#ffd128');c.drawImage(boy,0,0);drawRopeLayer(c,nodes,true,'#ffd128');return {nodes,pixels:c.getImageData(0,0,1000,1000).data};};
- for(const [phase,back] of [[Math.PI*1.5,true],[Math.PI*.5,false]]){const {nodes,pixels}=render(phase),overlap=nodes.filter(p=>{const k=(Math.round(p.y)*1000+Math.round(p.x))*4;return body[k+3]===255&&Math.abs(p.z)>10;});assert.ok(overlap.length>0);for(const p of overlap){const k=(Math.round(p.y)*1000+Math.round(p.x))*4;if(back)assert.deepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);else assert.notDeepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);}}
+ for(const [phase,back] of [[Math.PI*.5,true],[Math.PI*1.5,false]]){const {nodes,pixels}=render(phase),overlap=nodes.filter(p=>{const k=(Math.round(p.y)*1000+Math.round(p.x))*4;return body[k+3]===255&&Math.abs(p.z)>10;});assert.ok(overlap.length>0);for(const p of overlap){const k=(Math.round(p.y)*1000+Math.round(p.x))*4;if(back)assert.deepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);else assert.notDeepEqual([...pixels.slice(k,k+3)],[...body.slice(k,k+3)]);}}
 });
-test('rope depth clears the moving body envelope, and aircraft point in their travel direction',()=>{
- for(const kind of [0,1,2])for(const jump of [0,.8])for(let i=0;i<36;i++){const nodes=ropeFrame(i*Math.PI/18,{floor:900,scale:1,kind,jump});for(const p of nodes){const depth=bodyDepthAt(p.wx,p.wy,{floor:900,scale:1,kind,jump});if(depth>0)assert.ok(Math.abs(p.z)>=depth+5.99);}}
+test('rope rotates continuously without body-dependent snaps, and aircraft point in their travel direction',()=>{
+ const tau=Math.PI*2,options={floor:900,scale:1,kind:1,jump:.8};
+ for(let i=0;i<720;i++){const a=ropeFrame(i*tau/720,options),b=ropeFrame((i+1)*tau/720,options);for(let j=0;j<a.length;j++)assert.ok(Math.hypot(a[j].x-b[j].x,a[j].y-b[j].y)<6,'smooth continuous full orbit');}
+ const bottom=ropeFrame(0,options)[48];assert.ok(bottom.y>890);assert.ok(bodyDepthAt(bottom.x,bottom.y,options)===0,'jump clears underfoot crossing');
  for(const type of ['plane','helicopter']){const a=aircraftMotion(type,4,1000,2000),b=aircraftMotion(type,5,1000,2000);assert.equal(Math.sign(b.x-a.x),a.direction);}
+});
+
+test('BeatBot feet are mechanical and do not inherit human shoe cosmetics',()=>{
+ const render=shoes=>{const image=createCanvas(360,400),c=image.getContext('2d');drawCharacter(c,{x:180,y:360,robot:true,kind:1,look:{shoes},time:2});return image.toBuffer('image/png');};
+ assert.deepEqual(render(0),render(2));
 });

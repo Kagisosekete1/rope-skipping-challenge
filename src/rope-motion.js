@@ -8,12 +8,10 @@ export function bodyDepthAt(x,y,{floor,scale,jump=0,kind=0}){
  let depth=0;for(const [cx,cy,rx,ry,rz] of parts){const d=((lx-cx)/rx)**2+((ly-cy)/ry)**2;if(d<1)depth=Math.max(depth,Math.sqrt(1-d)*rz*scale);}return depth;
 }
 export function ropeFrame(phase,{floor,scale,jump=0,kind=0},count=96){
- const curve=cartoonRope(phase,floor,scale),nodes=[],side=Math.sin(phase)<0?-1:1;
+ const curve=cartoonRope(phase,floor,scale),nodes=[];
  for(let i=0;i<=count;i++){
   const u=i/count,v=1-u,wx=v*v*curve.start[0]+2*v*u*curve.control[0]+u*u*curve.end[0],wy=v*v*curve.start[1]+2*v*u*curve.control[1]+u*u*curve.end[1];
-  let z=Math.sin(phase)*Math.sin(Math.PI*u)*145*scale;
-  const body=bodyDepthAt(wx,wy,{floor,scale,jump,kind});
-  if(body>0&&Math.abs(z)<body+6*scale)z=side*(body+6*scale);
+  let z=-Math.sin(phase)*Math.sin(Math.PI*u)*(235*scale-8);
   nodes.push({x:wx+z*.25,y:wy+z*.20,z,wx,wy,u});
  }
  return nodes;

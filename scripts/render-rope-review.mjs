@@ -8,7 +8,7 @@ globalThis.Path2D=Path2D;GlobalFonts.registerFromPath('public/fonts/nunito-900.t
 const {drawCharacter,drawGroundShadow,drawBackground,drawSkyTraffic,courtActors}=await import('../.test-tmp/review-art.mjs');
 const {ropeFrame,drawRopeLayer}=await import('../.test-tmp/review-rope.mjs');
 const width=384,height=844,w=1000,h=1000*height/width,combined=createCanvas(width*3,height);
-for(const [index,phase,jump] of [[0,Math.PI*1.5,0],[1,0,1.05],[2,Math.PI*.5,0]]){
+for(const [index,phase,jump] of [[0,Math.PI*.5,0],[1,0,1.05],[2,Math.PI*1.5,0]]){
  const image=createCanvas(width,height),c=image.getContext('2d');c.scale(width/w,height/h);const {floor,scale}=courtActors(width,height);drawBackground(c,w,h,0,1);drawSkyTraffic(c,w,h,8);
  const nodes=ropeFrame(phase,{floor,scale,jump,kind:1});drawRopeLayer(c,nodes,false,'#ffd128',8);
  for(const x of [130,500,870])drawGroundShadow(c,x,floor,scale,x===500?jump:0);

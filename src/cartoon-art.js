@@ -9,13 +9,20 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  const shirt=COLORS[look.outfit??kind]||COLORS[0],skin=SKIN[look.skin??(kind===1?3:2)],hair=ITEMS.hair[look.hair??0]?.color||'#402217',shoe=ITEMS.shoes[look.shoes??kind]?.color||shirt;
  const step=walk?Math.sin(time*5):0,bounce=holder?0:walk?Math.abs(step)*4:0,win=emotion==='win',miss=emotion==='miss',excited=win||emotion==='happy',anticipate=emotion==='ready'?Math.sin(time*5)*.03:0;
  c.translate(0,-jump*92-bounce);if(win)c.rotate(Math.sin(time*6)*.055);const stretch=jump>0?1+.07*Math.sin(jump*Math.PI):1+anticipate;c.scale(1/stretch,stretch);
- // Rubber-hose legs and oversized canvas sneakers.
- for(const side of [-1,1]){const sx=side*22,sy=step*side*16,knee=jump?side*18:0;
+ // Only human characters use rubber-hose legs and canvas sneakers.
+ if(!robot)for(const side of [-1,1]){const sx=side*22,sy=step*side*16,knee=jump?side*18:0;
  line(c,`M ${sx} -92 Q ${sx+knee} -44 ${sx+step*side*15} -12`,INK,23);
  line(c,`M ${sx-side*7} -87 Q ${sx+knee-side*7} -43 ${sx+step*side*15-side*7} -14`,shirt,5);
  c.save();c.translate(sx+step*side*15,-10+Math.min(0,sy));c.rotate(jump?side*.13:step*side*.08);
  path(c,'M-19 -12 Q-19 -31 2 -27 L12 -9 Q38 -9 39 7 L-25 7 Q-31 0 -19 -12Z',shoe);path(c,'M-25 3 L39 3 L39 12 Q10 17 -26 11Z','#fff8e6');line(c,'M-5 -17 L9 -16 M-6 -10 L11 -9','#fff8e6',4);c.restore();}
  if(robot){
+  // Separate mechanical limbs: metal shin pistons, knee hubs and broad robot feet.
+  for(const side of [-1,1]){const sx=side*24,foot=sx+step*side*10;
+   line(c,`M${sx} -93 L${sx+side*(jump?12:0)} -53 L${foot} -13`,'#26394d',21);
+   line(c,`M${sx} -88 L${sx+side*(jump?12:0)} -53 L${foot} -14`,'#b9d9dd',11);
+   oval(c,sx+side*(jump?12:0),-53,14,13,'#ffca48',INK,3);
+   box(c,foot-24,-19,54,30,8,'#78d8cf');line(c,`M${foot-16} 3 H${foot+22}`,'#26394d',5);
+  }
   for(const side of [-1,1]){line(c,`M${side*45} -151 Q${side*83} -127 ${side*70} -93`,'#26394d',17);oval(c,side*70,-93,14,14,'#ffce48');}
   box(c,-48,-174,96,90,22,'#78d8cf');box(c,-63,-277,126,99,27,'#ffca48');box(c,-52,-263,104,63,19,'#26394d');
   for(const side of [-1,1]){oval(c,side*25,-238,12,excited?18:14,'#b5ff77',null);line(c,`M${side*25-7} -239 l7 -7 7 7`,'#26394d',3);}
@@ -24,7 +31,7 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  // Sunny's braids sit behind her shoulders, ears and face.
  if(kind===2)for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(62+i*2),-214+i*18,10-i*.5,13,hair,INK,2.5);
  // Waving sleeves and three-finger cartoon hands.
- for(const side of [-1,1]){const hx=holder?side*74+(side===1?Math.cos(phase)*6:0):win?side*100:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
+ for(const side of [-1,1]){const hx=holder?side*74+(side===1?Math.cos(phase)*6:0):win?side*100:side*(79+jump*12),hy=holder?-213+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
  path(c,`M${side*35} -167 Q${side*64} -158 ${hx} ${hy-13} L${hx-side*20} ${hy+10} Q${side*43} -130 ${side*28} -132Z`,shirt);
  c.save();c.translate(hx,hy);
  if(win){c.rotate(-side*.12);c.scale(side===-1?-1:1,1);oval(c,1,-2,15,17,skin,INK,2.5);line(c,'M-5 -10 Q0 -13 5 -10 M-5 -4 Q1 -7 6 -4',INK,1.5);path(c,'M-10 5 Q-20 0 -16 -8 Q-11 -14 -6 -5 L1 1 Q3 8 -4 9Z',skin,INK,2);}
@@ -83,9 +90,12 @@ export function scenePose(engine,time,screen){
  const e=engine?.current;return {phase:screen==='gameplay'?(e?.phase||0):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
 }
 // Quadratic rope path: at the collision phase its midpoint is just above the feet.
-export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*(77+Math.cos(phase)*6)*s,floor+(-145+Math.sin(phase)*12)*s];}
+export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*(77+Math.cos(phase)*6)*s,floor+(-235+Math.sin(phase)*12)*s];}
 export function cartoonRope(phase,floor,scale=1){
- const start=holderGrip(130,floor,scale,false,phase),end=holderGrip(870,floor,scale,true,phase),y=start[1],cos=Math.cos(phase),mid=Math.min(floor-8,y+cos*(cos>=0?floor-y-8:360*scale)+Math.sin(phase)*25*scale);
+ const start=holderGrip(130,floor,scale,false,phase),end=holderGrip(870,floor,scale,true,phase),y=start[1];
+ // One smooth orbit around raised, anchored hands. Bottom crosses at phase zero;
+ // the upper half clears the head rather than clamping into a repeated U shape.
+ const radius=235*scale-8,mid=y+Math.cos(phase)*radius;
  return {start,control:[500+Math.sin(phase)*48*scale,2*mid-y],end};
 }
 export function playgroundLayout(h){const horizon=Math.max(65,Math.min(h*.40,h-420));return {horizon,courtTop:horizon+126,spectatorFloor:horizon+165};}
@@ -135,4 +145,4 @@ export function drawGroundShadow(c,x,floor,scale,jump=0){
  for(const [radius,alpha] of [[70,.04],[52,.055],[34,.075]]){c.beginPath();c.ellipse(x+7*scale,floor+12*scale,radius*scale*shrink,9*scale*shrink,0,0,Math.PI*2);c.fillStyle=`rgba(75,52,49,${alpha*(1-jump*.2)})`;c.fill();}c.restore();
 }
 
-export function aircraftMotion(type,t,w,h){const ceiling=Math.max(110,playgroundLayout(h).horizon-95);return type==='helicopter'?{x:w+130-((t*33+620)%(w+260)),y:Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8,direction:-1}:{x:((t*42+160)%(w+280))-140,y:Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9,direction:1};}
+export function aircraftMotion(type,t,w,h){const ceiling=Math.max(110,playgroundLayout(h).horizon-95);return type==='helicopter'?{x:((t*33+120)%(w+260))-130,y:Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8,direction:1}:{x:((t*42+160)%(w+280))-140,y:Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9,direction:1};}
