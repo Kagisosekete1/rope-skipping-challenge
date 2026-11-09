@@ -1,3 +1,4 @@
+import {levelTheme} from './themes';
 import { COLORS, SKIN, ITEMS, jumpHeight } from './game';
 export const INK='#202533';
 function path(c,d,fill,stroke=INK,width=3.6){c.beginPath();const p=new Path2D(d);if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.lineJoin='round';c.lineCap='round';c.stroke(p);}}
@@ -97,7 +98,9 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  c.restore();
 }
 export function drawBackground(c,w,h,t=0,level=1){
- const palette=[['#82e0e8','#b7e3a0','#f49b88'],['#ffd79c','#c4cf85','#e4a6c6'],['#b6d5f2','#a6d1b3','#f1b17e']][Math.floor((level-1)/4)%3];
+ const theme=levelTheme(level);
+ if(theme.kind!=='court'){drawThemedBackground(c,w,h,theme);return;}
+ const palette=[theme.sky,'#b7e3a0',theme.ground];
  c.fillStyle=palette[0];c.fillRect(0,0,w,h);const {horizon}=playgroundLayout(h);
  // Sun cel; all clouds move in the independent sky layer.
  oval(c,w*.86,Math.max(75,Math.min(horizon-120,h*.19)),58,58,'#ffdd5a',INK,4);for(let i=0;i<12;i++){const a=i*Math.PI/6;line(c,`M${w*.86+Math.cos(a)*73} ${Math.max(75,Math.min(horizon-120,h*.19))+Math.sin(a)*73} l${Math.cos(a)*13} ${Math.sin(a)*13}`,INK,3);}
@@ -119,7 +122,7 @@ export function drawBackground(c,w,h,t=0,level=1){
  drawGameLogo(c,w/2-220,horizon-124,440,true);
 }
 export function scenePose(engine,time,screen){
- const e=engine?.current;return {phase:screen==='gameplay'?(e?.phase||0):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
+ const e=engine?.current,caught=screen==='gameplay'&&e?.result==='miss'&&!['skipping','ready','rolling'].includes(e?.state);return {caught,phase:screen==='gameplay'?(caught?Math.PI*2-.55:(e?.phase||0)):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
 }
 // Quadratic rope path: at the collision phase its midpoint is just above the feet.
 export function holderGrip(x,floor,scale,flip,phase){const p=holderArmPose(phase),sign=flip?-1:1;return [x+sign*(p.x+23*Math.sin(p.angle))*scale,floor+(p.y-23*Math.cos(p.angle))*scale];}
@@ -131,14 +134,14 @@ export function cartoonRope(phase,floor,scale=1){
  return {start,control:[500+Math.sin(phase)*48*scale,2*mid-y],end};
 }
 export function playgroundLayout(h){const horizon=Math.max(65,Math.min(h*.40,h-420));return {horizon,courtTop:horizon+126,spectatorFloor:horizon+165};}
-export function drawSpectator(c,{x,y,scale=.3,time=0,variant=0}){
- c.save();c.translate(x,y);c.scale(scale,scale);const step=Math.sin(time*4),skin=['#b87750','#e8ae7b','#704b3b'][variant%3],shirt=['#e9ae71','#a0c888','#a396bd'][variant%3];
+export function drawSpectator(c,{x,y,scale=.3,time=0,variant=0,direction=1}){
+ c.save();c.translate(x,y);c.scale(direction*scale,scale);const step=Math.sin(time*4),skin=['#b87750','#e8ae7b','#704b3b'][variant%3],shirt=['#e9ae71','#a0c888','#a396bd'][variant%3];
  for(const side of [-1,1]){const footX=side*14+step*side*17;line(c,`M${side*13} -63 Q${footX} -34 ${footX} -8`,INK,13);box(c,footX-11,-8-Math.max(0,step*side*12),29,13,5,'#eee4c9');line(c,`M${side*23} -130 Q${side*45} -103 ${side*35-step*side*10} -83`,skin,11);}
  path(c,variant===1?'M-19 -139 L19 -139 L35 -56 L-35 -56Z':'M-25 -140 L24 -140 L30 -64 L-29 -64Z',shirt);
  oval(c,0,-176,30,36,skin);if(variant===0){path(c,'M-31 -193 Q-23 -225 7 -217 Q35 -209 31 -192Z','#ddd4c0');line(c,'M-35 -192 H37',INK,5);line(c,'M-19 -172 H-2 M7 -172 H24',INK,8);line(c,'M-2 -172 H7',INK,3);}
  else if(variant===1){path(c,'M-31 -167 Q-46 -210 -7 -216 Q26 -225 33 -184 L20 -192 Q-3 -178 -24 -190Z','#6d3c30');oval(c,-25,-207,18,19,'#6d3c30');}
  else{path(c,'M-32 -191 Q-31 -219 4 -213 Q31 -210 31 -190Z','#e9e1cb');path(c,'M-20 -158 Q0 -136 23 -159 Q14 -130 -6 -139Z','#5f3b2b');}
- if(variant!==0){oval(c,-10,-174,3,5,INK,null);oval(c,12,-174,3,5,INK,null);}line(c,'M-8 -157 Q1 -151 12 -158',INK,2);c.restore();
+ if(variant!==0){oval(c,-10,-174,3,5,INK,null);oval(c,12,-174,3,5,INK,null);}line(c,'M-8 -157 Q1 -151 12 -158',INK,2);path(c,'M25 -179 Q40 -169 27 -165Z',skin,INK,2);line(c,'M0 -135 V-85',INK,2);box(c,5,-113,13,15,2,shirt);c.restore();
 }
 
 export function courtActors(pixelWidth,pixelHeight,gameplay=true){
@@ -178,3 +181,58 @@ export function drawGroundShadow(c,x,floor,scale,jump=0){
 }
 
 export function aircraftMotion(type,t,w,h){const ceiling=Math.max(110,playgroundLayout(h).horizon-95);return type==='helicopter'?{x:((t*33+120)%(w+260))-130,y:Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8,direction:1}:{x:((t*42+160)%(w+280))-140,y:Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9,direction:1};}
+
+function themeTree(c,x,y,size=1,pine=false){
+ c.save();c.translate(x,y);c.scale(size,size);box(c,-11,-80,22,90,5,'#a47051');
+ if(pine){for(let i=0;i<3;i++)path(c,`M0 ${-210+i*45} L${-85+i*9} ${-90+i*34} H${85-i*9}Z`,['#3b8972','#53a67d','#68b68b'][i]);}
+ else for(let i=0;i<5;i++)oval(c,Math.cos(i*1.3)*44,-110+Math.sin(i*1.3)*35,48,44,['#7abf65','#9ad17a','#66aa61'][i%3],INK,3);
+ c.restore();
+}
+function drawThemedBackground(c,w,h,theme){
+ const {horizon}=playgroundLayout(h),night=theme.kind==='night';c.fillStyle=theme.sky;c.fillRect(0,0,w,h);
+ if(theme.indoor){
+  // Windowed playroom, bunting, cubbies, books and a colourful foam floor.
+  for(const x of [100,640]){box(c,x,horizon-250,245,185,16,'#99dce7');line(c,`M${x+122} ${horizon-248}v180 M${x} ${horizon-157}h245`,'#fff6d2',9);path(c,`M${x+12} ${horizon-79} Q${x+80} ${horizon-147} ${x+150} ${horizon-80}`,'#a2cc87',null);}
+  for(let i=0;i<9;i++){const x=65+i*110;line(c,`M${x} ${horizon-285}l110 8`,INK,2);path(c,`M${x} ${horizon-285}l65 5 -32 45Z`,['#f18d9e','#69bbcc','#f4cf60'][i%3]);}
+  box(c,18,horizon-60,220,140,8,'#d49467');for(let i=0;i<4;i++){box(c,30+i*52,horizon-48,42,54,3,['#e78096','#7ac2c6','#f2d16e','#9a96cf'][i]);box(c,30+i*52,horizon+15,42,52,3,'#ffe9ad');}
+  box(c,754,horizon-30,220,110,8,'#ba845f');for(let i=0;i<10;i++)box(c,765+i*19,horizon-18,15,65,2,['#73b8cc','#f1c962','#e9879c'][i%3]);
+  c.font='900 29px Nunito';c.fillStyle=INK;c.textAlign='center';c.fillText('PLAY · LEARN · JUMP',w/2,horizon+25);
+ }else if(theme.kind==='park'||theme.kind==='forest'){
+  c.fillStyle=theme.kind==='forest'?'#75aa83':'#a9d48b';c.beginPath();c.moveTo(0,horizon+50);for(let x=0;x<=w;x+=100)c.lineTo(x,horizon-50+Math.sin(x*.009)*35);c.lineTo(w,horizon+100);c.lineTo(0,horizon+100);c.fill();
+  for(let i=0;i<7;i++)themeTree(c,i*180-35,horizon+55,.8+(i%3)*.2,theme.kind==='forest');
+  if(theme.kind==='park'){
+   // Slide tower and two-seat swing set stay behind the pedestrian path.
+   box(c,115,horizon-75,108,95,5,'#f3bf6c');path(c,`M100 ${horizon-75} L170 ${horizon-130} L238 ${horizon-75}Z`,'#dc7d86');path(c,`M211 ${horizon-50} Q260 ${horizon+65} 360 ${horizon+58} L355 ${horizon+79} Q245 ${horizon+85} 192 ${horizon-50}Z`,'#68b7cf');
+   line(c,`M650 ${horizon+85} L685 ${horizon-100} H895 L935 ${horizon+85}`,'#6d84a6',10);
+  }else{path(c,`M280 ${horizon+90} Q450 ${horizon-40} 700 ${horizon+80}`,'#ddb97a',INK,3);box(c,425,horizon-50,160,70,9,'#b58b5d');c.font='900 20px Nunito';c.textAlign='center';c.fillStyle='#fff5d2';c.fillText('FOREST TRAIL',505,horizon-10);}
+ }else if(theme.kind==='beach'){
+  c.fillStyle='#4bb9d0';c.fillRect(0,horizon-80,w,160);for(let j=0;j<3;j++)line(c,`M0 ${horizon-50+j*35} Q200 ${horizon-75+j*35} 400 ${horizon-50+j*35} T800 ${horizon-50+j*35} T1200 ${horizon-50+j*35}`,'#cbf0e7',4);
+  for(const x of [160,840]){line(c,`M${x} ${horizon+90} V${horizon-65}`,'#a97b56',7);path(c,`M${x-100} ${horizon-55} Q${x} ${horizon-170} ${x+100} ${horizon-55}Z`,x===160?'#ef8fa4':'#f4d36b');box(c,x-55,horizon+34,110,35,6,'#fff0c6');}
+ }else{
+  oval(c,w*.8,horizon-180,43,43,'#fff0ad',null);for(let i=0;i<45;i++){const x=(i*149)%w,y=50+(i*79)%Math.max(60,horizon-95);path(c,`M${x} ${y-4} l2 3 4 1 -4 2 -2 4 -1 -4 -4 -2 4 -1Z`,'#f9ecb2',null);}
+  for(let i=0;i<8;i++)box(c,i*145,horizon-75-(i%3)*35,125,150,5,['#59628c','#747ba4','#6c7093'][i%3]);
+  for(const x of [120,880]){line(c,`M${x} ${horizon+100}V${horizon-110}`,INK,6);oval(c,x,horizon-114,20,28,'#ffe5a1');}
+ }
+ // Each location has a grounded pedestrian path and its own play surface.
+ c.fillStyle=theme.indoor?'#f0dcb0':night?'#76718b':'#a3c886';c.fillRect(0,horizon+80,w,46);
+ c.fillStyle=theme.ground;c.fillRect(0,horizon+126,w,h);c.fillStyle=theme.indoor?'#d8b786':'#e9c19b';c.fillRect(0,horizon+126,w,45);line(c,`M0 ${horizon+126}H${w} M0 ${horizon+171}H${w}`,INK,3);
+ if(theme.indoor){for(let y=horizon+171,row=0;y<h;y+=180,row++)for(let x=0,col=0;x<w;x+=170,col++){box(c,x,y,170,180,2,['#eab8cb','#b7d8cd','#f2daa2','#bdc9e3'][(row+col+theme.tour)%4]);}}
+ else{for(let i=0;i<3;i++)line(c,`M${-100+i*w*.5} ${h} L${w*.5+(i-1)*150} ${horizon+128}`,'#fff0cc',4);c.save();c.translate(w/2,h*.81);c.scale(1,.25);oval(c,0,0,w*.37,w*.37,'#ffffff00','#fff0cc',8);c.restore();}
+ drawGameLogo(c,w/2-205,horizon-143,410,true);
+ c.font='900 22px Nunito';c.textAlign='center';c.fillStyle=night?'#fff0bd':INK;c.fillText(theme.name,w/2,horizon+115);
+}
+export function drawThemeLife(c,w,h,time,level){
+ const theme=levelTheme(level),{horizon}=playgroundLayout(h);
+ if(theme.kind==='park')for(let i=0;i<2;i++){
+  const x=735+i*105,sway=Math.sin(time*1.8+i)*16,y=horizon+18;
+  line(c,`M${x} ${horizon-98} L${x+sway} ${y} M${x+30} ${horizon-98} L${x+30+sway} ${y}`,'#665f58',3);box(c,x+sway-6,y,44,8,3,'#c1845a');
+  c.save();c.translate(x+15+sway,y-3);c.scale(.66,.66);
+  const skin=i?'#b9784a':'#dfa278',shirt=i?'#e68b9e':'#6db4ce',kick=Math.sin(time*1.8+i)*9;
+  for(const side of [-1,1]){line(c,`M${side*8} -8 L${side*17} 9 L${side*17+kick} 27`,INK,8);box(c,side*17+kick-7,25,16,8,3,'#fff3cb');line(c,`M${side*10} -34 L${side*26} -65`,skin,7);}
+  box(c,-14,-41,28,34,6,shirt);oval(c,0,-61,17,20,skin,INK,2);path(c,'M-17 -66 Q-17 -88 4 -82 Q20 -77 17 -63 L6 -70 Q-4 -60 -17 -66Z',i?'#442a24':'#805537',INK,2);oval(c,-6,-61,2,3,INK,null);oval(c,7,-61,2,3,INK,null);line(c,'M-5 -51 Q0 -46 6 -51',INK,2);c.restore();
+ }
+ if(theme.indoor){
+  for(let i=0;i<2;i++){const x=300+i*360;drawSpectator(c,{x,y:horizon+120,scale:.35,time:time*.4+i,variant:i+1,direction:i?-1:1});oval(c,x+35,horizon+106-Math.abs(Math.sin(time*2+i))*35,13,13,i?'#e990a7':'#6faecb',INK,2);}
+  for(let i=0;i<5;i++)box(c,390+i*25,horizon+95-(i%2)*24,24,24,3,['#e9a47c','#a0cab0','#b7b0d8'][i%3]);
+ }
+}

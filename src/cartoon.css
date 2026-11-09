@@ -341,3 +341,6 @@ em { color:#d54f6e; }
 .app .home-actions>.button { max-width:100%; white-space:normal; text-align:center; }
 .app .profile-avatars button:disabled { background:#e6e7dc; border-style:dashed; }
 @media(max-height:650px){.app .home-top{padding:8px 14px}.app .home-logo{width:min(340px,72%)}.app .home-logo .brand-logo{height:105px}.app .home-logo p{font-size:10px}.app .home-actions{gap:8px;bottom:94px}.app .home-actions .button{min-height:43px;font-size:14px;padding:7px 15px}.app .home-actions .play-big{font-size:24px}}
+
+/* Desktop only: keep the wordmark clear of the crew's faces. */
+@media(min-width:900px){.app .home-logo{margin-top:-24px;width:min(450px,52vw)}.app .home-logo .brand-logo{height:clamp(105px,21dvh,180px)}.app .home-logo p{margin-top:0}}

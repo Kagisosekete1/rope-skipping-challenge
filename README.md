@@ -107,3 +107,12 @@ Rope holders use one shared wrist/handle pose for their bent sleeves, rotating
 grip and rope endpoint. The foreground redraw uses that same hand artwork,
 replacing the old static rectangular fist. Resting hands have compact rounded
 fingers; victory uses small clenched fists and alternating bent-arm pumps.
+
+### Themed journeys and logo-only launchers (3.3.0)
+Levels 1–10 keep the neighbourhood court; 11–20 visit a park with playing kids;
+21–30 enter a windowed crèche playroom. Seaside, woodland and starlight scenes
+follow in ten-level groups. The six locations recur with new sky/floor palettes in further tours without a
+level cap. Walkers face and travel both ways on the ground path. Indoor rooms
+exclude outdoor clouds, aircraft and birds. A caught rope remains in front of
+the feet with stationary stripe detail until the next roll. Home's logo is
+raised only on desktop. PWA/Android icons contain only the rope/bubble wordmark.

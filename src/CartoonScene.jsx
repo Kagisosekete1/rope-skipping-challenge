@@ -1,8 +1,9 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {drawCharacter,drawBackground,scenePose,cartoonRope,holderGrip,drawHolderGrip,drawSpectator,playgroundLayout,courtActors,drawSkyTraffic,drawGameLogo,drawGroundShadow,INK} from './cartoon-art';
+import {drawCharacter,drawBackground,scenePose,cartoonRope,holderGrip,drawHolderGrip,drawThemeLife,drawSpectator,playgroundLayout,courtActors,drawSkyTraffic,drawGameLogo,drawGroundShadow,INK} from './cartoon-art';
 import ItemArt from './ItemArt';
 import {sceneCast} from './cast';
 import {ropeFrame,drawRopeLayer} from './rope-motion';
+import {levelTheme,spectatorMotion} from './themes';
 import {ITEMS,SKIN} from './game';
 export function CartoonPreview({kind=0,look={},robot=false,className='',mode=false,looks=[],portrait=false}){
  const canvas=useRef(null);
@@ -36,10 +37,12 @@ export default function CartoonScene(props){
     const w=1000,h=1000*height/width;c.setTransform(el.width/w,0,0,el.height/h,0,0);c.clearRect(0,0,w,h);
     const key=width+':'+height+':'+(p.save.level||1);
     if(bc){if(key!==backKey){back.width=el.width;back.height=el.height;bc.setTransform(back.width/w,0,0,back.height/h,0,0);drawBackground(bc,w,h,0,p.save.level||1);backKey=key;}c.drawImage(back,-3+Math.sin(time*.12)*2,-2,w+6,h+4);}else drawBackground(c,w,h,0,p.save.level||1);
-    drawSkyTraffic(c,w,h,time);
+    const theme=levelTheme(p.save.level);
+    if(!theme.indoor)drawSkyTraffic(c,w,h,time);
+    drawThemeLife(c,w,h,time,p.save.level);
     // Background life stays behind the action and uses a slow walk cycle.
-    for(let i=0;i<3;i++){const x=((time*16+i*370)%(w+200))-100,y=playgroundLayout(h).spectatorFloor;drawGroundShadow(c,x,y-7*Math.min(.40,h/2200),Math.min(.40,h/2200)*.7);drawSpectator(c,{x,y,scale:Math.min(.40,h/2200),time:time+i,variant:i});}
-    for(let i=0;i<4;i++){const x=((time*34+i*290)%(w+180))-90,y=Math.min(playgroundLayout(h).horizon-70,h*.26)+i%2*35+Math.sin(time+i)*10;c.beginPath();c.strokeStyle=INK;c.lineWidth=3;c.moveTo(x-14,y-Math.sin(time*5+i)*7);c.quadraticCurveTo(x-8,y-12,x,y);c.quadraticCurveTo(x+8,y-12,x+14,y-Math.sin(time*5+i)*7);c.stroke();}
+    for(let i=0;i<4;i++){const movement=spectatorMotion(i,time,w),y=playgroundLayout(h).spectatorFloor,s=Math.min(.43,h/2100);drawGroundShadow(c,movement.x,y-7*s,s*.7);drawSpectator(c,{x:movement.x,y,scale:s,time:time+i,variant:i%3,direction:movement.direction});}
+    if(!theme.indoor)for(let i=0;i<4;i++){const x=((time*34+i*290)%(w+180))-90,y=Math.min(playgroundLayout(h).horizon-70,h*.26)+i%2*35+Math.sin(time+i)*10;c.beginPath();c.strokeStyle=INK;c.lineWidth=3;c.moveTo(x-14,y-Math.sin(time*5+i)*7);c.quadraticCurveTo(x-8,y-12,x,y);c.quadraticCurveTo(x+8,y-12,x+14,y-Math.sin(time*5+i)*7);c.stroke();}
     const gameplay=p.screen==='gameplay',welcome=p.screen==='welcome',custom=p.screen==='customize',profile=p.screen==='profile',reward=p.screen==='rewards';
     const pose=scenePose(p.engine,time,p.screen),m=p.engine.current,actors=courtActors(width,height,gameplay),scale=actors.scale,floor=actors.floor;
     const cast=sceneCast(p.save.profile,m,p.screen);
@@ -48,18 +51,18 @@ export default function CartoonScene(props){
     if(['welcome','home','gameplay'].includes(p.screen)){
      const y=floor,handY=y-123*scale,phase=pose.phase;
      const nodes=ropeFrame(phase,{floor,scale,jump:pose.jump,kind});
-     drawRopeLayer(c,nodes,false,ITEMS.rope[p.save.rope]?.color||'#ffdd52',time);
+     drawRopeLayer(c,nodes,false,ITEMS.rope[p.save.rope]?.color||'#ffdd52',pose.caught?0:time);
      const [leftKind,rightKind]=cast.holders;
      drawGroundShadow(c,130,floor,scale);drawGroundShadow(c,870,floor,scale);drawGroundShadow(c,500,floor,scale,pose.jump);
      drawCharacter(c,{x:130,y,scale,kind:leftKind,look:p.save.looks[leftKind],time,holder:1,phase});
      drawCharacter(c,{x:870,y,scale,kind:rightKind,look:p.save.looks[rightKind],time,holder:1,phase,flip:true});
      drawCharacter(c,{x:500,y:floor,scale,kind,look:p.save.looks[kind],time,jump:pose.jump,emotion,robot});
-     drawRopeLayer(c,nodes,true,ITEMS.rope[p.save.rope]?.color||'#ffdd52',time);
+     drawRopeLayer(c,nodes,true,ITEMS.rope[p.save.rope]?.color||'#ffdd52',pose.caught?0:time);
      // Use the identical animated grip above the rope; never paint a second static fist.
      for(const [x,flip] of [[130,false],[870,true]]){const k=cast.holders[flip?1:0];drawHolderGrip(c,{x,y:floor,scale,flip,phase,skin:SKIN[p.save.looks[k]?.skin??(k===1?3:2)]});}
      if(gameplay&&m.combo>=3&&pose.jump>.2){c.save();c.fillStyle='#ffdc68';c.strokeStyle=INK;c.lineWidth=2;for(let i=0;i<5;i++){const a=time*2+i*Math.PI*.4,sx=500+Math.cos(a)*100*scale,sy=floor-210*scale+Math.sin(a)*40*scale;c.beginPath();for(let j=0;j<10;j++){const r=j%2?4:9;c.lineTo(sx+Math.cos(j*Math.PI/5)*r,sy+Math.sin(j*Math.PI/5)*r);}c.closePath();c.fill();c.stroke();}c.restore();}
      if(pose.jump>.1){for(const side of [-1,1]){c.strokeStyle='#fff8df';c.lineWidth=4;c.beginPath();c.moveTo(500+side*65*scale,floor-60);c.lineTo(500+side*74*scale,floor-95);c.stroke();}}
-     if(gameplay&&m.result==='miss'&&m.state==='turnEnd'){c.font='900 34px Nunito';c.textAlign='center';c.lineWidth=6;c.strokeStyle=INK;c.fillStyle='#ffe46e';c.strokeText('WHOOPS!',500,floor-340*scale);c.fillText('WHOOPS!',500,floor-340*scale);}
+     if(gameplay&&m.result==='miss'&&m.state==='turnEnd'){c.font='900 34px Nunito';c.textAlign='center';c.lineWidth=6;c.strokeStyle=INK;c.fillStyle='#ffe46e';c.strokeText('ROPE CAUGHT IN FRONT',500,floor-355*scale);c.fillText('ROPE CAUGHT IN FRONT',500,floor-355*scale);}
     }else if(custom||profile||reward){const x=reward?500:width<650?270:280,y=reward?h*.64:floor,s=scale*(reward?1.12:1.17);drawGroundShadow(c,x,y,s);drawCharacter(c,{x,y,scale:s,kind,look:custom?p.lookDraft:p.save.looks[kind],time,emotion,robot});}
     if(gameplay&&m.jumpAge>.69&&m.jumpAge<.95){c.save();c.globalAlpha=1-(m.jumpAge-.69)/.26;c.fillStyle='#fff2cf';c.strokeStyle=INK;c.lineWidth=3;for(const side of [-1,1])for(let i=0;i<3;i++){c.beginPath();c.ellipse(500+side*(25+i*19)*scale,floor+7-i*6,15+i*3,9+i*2,0,0,Math.PI*2);c.fill();c.stroke();}c.restore();}
     if(welcome){const logoWidth=Math.min(820,h*.45);drawGameLogo(c,(w-logoWidth)/2,Math.max(60,h*.10),logoWidth);}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createCanvas,Path2D,GlobalFonts} from '@napi-rs/canvas';
-import {drawCharacter,drawBackground,scenePose,aircraftMotion} from '../src/cartoon-art';
+import {drawCharacter,drawBackground,scenePose,aircraftMotion,drawThemeLife} from '../src/cartoon-art';
 import ItemArt from '../src/ItemArt';
 import {ropeFrame,drawRopeLayer,bodyDepthAt} from '../src/rope-motion';
 import {CartoonDie} from '../src/CartoonScene';
@@ -42,4 +42,15 @@ test('rope rotates continuously without body-dependent snaps, and aircraft point
 test('BeatBot feet are mechanical and do not inherit human shoe cosmetics',()=>{
  const render=shoes=>{const image=createCanvas(360,400),c=image.getContext('2d');drawCharacter(c,{x:180,y:360,robot:true,kind:1,look:{shoes},time:2});return image.toBuffer('image/png');};
  assert.deepEqual(render(0),render(2));
+});
+
+test('a caught rope rests visibly in front and stays still until the next roll',()=>{
+ const engine={current:{phase:.03,state:'turnEnd',result:'miss',jumpAge:9}};
+ const pose=scenePose(engine,1,'gameplay');assert.equal(pose.caught,true);
+ assert.equal(scenePose(engine,100,'gameplay').phase,pose.phase);
+ const nodes=ropeFrame(pose.phase,{floor:900,scale:1});assert.ok(nodes[48].z>0,'front pass remains visible');assert.ok(nodes[48].y>850,'rope rests against feet');
+ engine.current.state='ready';assert.equal(scenePose(engine,100,'gameplay').caught,false);
+});
+test('all six themed locations and animated play activities render distinctly',()=>{
+ const scenes=new Set();for(const level of [1,11,21,31,41,51]){const image=createCanvas(640,900),c=image.getContext('2d');drawBackground(c,640,900,0,level);drawThemeLife(c,640,900,3,level);scenes.add(image.toBuffer('image/png').toString('base64'));}assert.equal(scenes.size,6);
 });
