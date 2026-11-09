@@ -71,3 +71,10 @@ balances. No private wallet is made public. The public leaderboard still uses
 the sanitized ranking RPC, refreshed every 2.5 seconds; online matches use push
 updates plus a non-overlapping 500 ms server-tick fallback. Gender selection is
 stored privately in Supabase Auth user metadata and does not need a table field.
+
+## Six means roll again (007)
+Apply `007_six_roll_again.sql` after 006. It updates only server game functions:
+a six returns the current player to an idle reroll with a fresh turn deadline,
+without changing progress, the stake, the point pot or the player whose turn it
+is. The next roll clears the reroll flag. Existing RLS and action idempotency are
+preserved. Local solo/pass-and-play use the same rule in the game engine.

@@ -70,3 +70,18 @@ Home shows the player's gallery photo (or chosen crew avatar), and the Home
 wordmark is the owner's requested exception to the shadow-free UI. Gameplay
 uses a smaller dice dock/roll button and keeps Tools directly above the jump
 counter on the left. Sunny's braids are drawn behind her shoulders and face.
+
+### Roomier phone court and Rope Edition branding (3.1.0)
+All three crew members use one scale and wider spacing. The upper rope sweep is
+rendered behind the characters and clears their hair, including warm-up hops.
+Clouds now belong to an uncached moving layer at lower sky heights, with original
+animated propeller-plane and helicopter flybys. Victory hands are rounded fists.
+The rope-framed original wordmark is shared by Home, Welcome, court signage,
+PWA branding and Android launcher artwork. Native review frames include the
+384×844 and 576×1280 phone proportions supplied in feedback.
+
+A six grants a free same-turn reroll with no score. Tap the die or Roll Again;
+BeatBot rerolls on its turn. Apply `007_six_roll_again.sql` for the online server
+rule. Previous migrations must remain applied. Normal/Hard BeatBot has improved
+but fallible timing and can spend its own existing Shield/Boost once per match.
+Solo rope speed increases modestly with level, with a safe minimum period.

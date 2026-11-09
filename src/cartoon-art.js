@@ -24,10 +24,11 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  // Sunny's braids sit behind her shoulders, ears and face.
  if(kind===2)for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(62+i*2),-214+i*18,10-i*.5,13,hair,INK,2.5);
  // Waving sleeves and three-finger cartoon hands.
- for(const side of [-1,1]){const hx=holder?side*74:win?side*90:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?-226:-111-jump*35+(walk?step*side*12:0);
+ for(const side of [-1,1]){const hx=holder?side*74:win?side*100:side*(79+jump*12),hy=holder?-123+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
  path(c,`M${side*35} -167 Q${side*64} -158 ${hx} ${hy-13} L${hx-side*20} ${hy+10} Q${side*43} -130 ${side*28} -132Z`,shirt);
  c.save();c.translate(hx,hy);
- if(holder&&side===1){line(c,'M3 -22 V21',INK,13);line(c,'M3 -20 V19','#ffcc54',7);path(c,'M-13 -7 Q-13 -17 -3 -14 L14 -10 Q21 -6 15 1 Q18 10 9 13 L-9 10 Q-17 4 -13 -7Z',skin,INK,3);line(c,'M-7 -4 L11 -1 M-7 3 L10 6',INK,2);path(c,'M-11 -12 Q-3 -20 3 -10 L8 -5 Q9 3 2 2 L-9 -4Z',skin,INK,2.5);}
+ if(win){c.rotate(-side*.12);c.scale(side===-1?-1:1,1);oval(c,1,-2,15,17,skin,INK,2.5);line(c,'M-5 -10 Q0 -13 5 -10 M-5 -4 Q1 -7 6 -4',INK,1.5);path(c,'M-10 5 Q-20 0 -16 -8 Q-11 -14 -6 -5 L1 1 Q3 8 -4 9Z',skin,INK,2);}
+ else if(holder&&side===1){line(c,'M3 -22 V21',INK,13);line(c,'M3 -20 V19','#ffcc54',7);path(c,'M-13 -7 Q-13 -17 -3 -14 L14 -10 Q21 -6 15 1 Q18 10 9 13 L-9 10 Q-17 4 -13 -7Z',skin,INK,3);line(c,'M-7 -4 L11 -1 M-7 3 L10 6',INK,2);path(c,'M-11 -12 Q-3 -20 3 -10 L8 -5 Q9 3 2 2 L-9 -4Z',skin,INK,2.5);}
  else{c.rotate(side*.35);path(c,'M-11 -7 Q-21 -20 -12 -22 L-3 -15 Q-6 -33 2 -33 Q9 -33 9 -16 Q13 -34 20 -28 Q24 -24 18 -11 Q35 -18 35 -9 Q30 1 16 6 Q1 14 -11 -7Z',skin,INK,3);}c.restore();}
  // Hoodie, stitched pocket and contrasting cuff.
  path(c,'M-29 -176 Q0 -187 32 -175 Q46 -150 43 -94 Q1 -80 -43 -94 Q-45 -146 -29 -176Z',shirt);
@@ -59,9 +60,8 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
 export function drawBackground(c,w,h,t=0,level=1){
  const palette=[['#82e0e8','#b7e3a0','#f49b88'],['#ffd79c','#c4cf85','#e4a6c6'],['#b6d5f2','#a6d1b3','#f1b17e']][Math.floor((level-1)/4)%3];
  c.fillStyle=palette[0];c.fillRect(0,0,w,h);const {horizon}=playgroundLayout(h);
- // Inked sun and drifting cloud cels.
- oval(c,w*.86,130,58,58,'#ffdd5a',INK,4);for(let i=0;i<12;i++){const a=i*Math.PI/6;line(c,`M${w*.86+Math.cos(a)*73} ${130+Math.sin(a)*73} l${Math.cos(a)*13} ${Math.sin(a)*13}`,INK,3);}
- for(let i=0;i<5;i++){const x=((i*270+t*5)%(w+260))-100,y=150+(i%3)*65;c.save();c.translate(x,y);path(c,'M-75 15 Q-95 -14 -58 -25 Q-49 -65 -13 -45 Q22 -77 46 -34 Q93 -33 80 9 Q27 28 -75 15Z','#fff9da','#3d6672',3);line(c,'M-42 -16 Q-18 -32 0 -16','#c3e7de',3);c.restore();}
+ // Sun cel; all clouds move in the independent sky layer.
+ oval(c,w*.86,Math.max(75,Math.min(horizon-120,h*.19)),58,58,'#ffdd5a',INK,4);for(let i=0;i<12;i++){const a=i*Math.PI/6;line(c,`M${w*.86+Math.cos(a)*73} ${Math.max(75,Math.min(horizon-120,h*.19))+Math.sin(a)*73} l${Math.cos(a)*13} ${Math.sin(a)*13}`,INK,3);}
  // Crooked seaside apartment silhouettes with individually inked windows.
  for(let i=0;i<10;i++){const x=i*135-100+(Math.sin(t*.08)*4),bh=110+(i%3)*55;c.save();c.translate(x,horizon-bh);c.rotate((i%2?1:-1)*.025);box(c,0,0,128,bh+35,9,['#f6bb66','#e6a9b9','#a4cace'][i%3]);path(c,'M-9 4 L63 -30 L138 4Z',['#d46a5e','#857cba','#589cac'][i%3]);for(let row=0;row<3;row++)for(let col=0;col<3;col++){box(c,18+col*33,25+row*45,20,27,3,'#fff3b4');line(c,`M${28+col*33} ${25+row*45}v27`,'#477883',2);}c.restore();}
  c.fillStyle=palette[1];c.fillRect(0,horizon,w,h*.2);
@@ -76,19 +76,19 @@ export function drawBackground(c,w,h,t=0,level=1){
  for(let i=0;i<3;i++){line(c,`M${-100+i*w*.5} ${h} L${w*.5+(i-1)*150} ${horizon+128}`,'#ffe8ba',5);}
  c.save();c.translate(w*.5,h*.81);c.scale(1,.25);oval(c,0,0,w*.39,w*.39,'#ffffff00','#ffe8ba',10);c.restore();
  for(let i=0;i<20;i++){c.fillStyle='#bb687f';c.fillRect((i*173)%w,horizon+145+(i*67)%Math.max(20,h-horizon-150),3,2);}
- // Original cartoon banner.
- c.save();c.translate(w/2,horizon-80);c.rotate(-.025);box(c,-215,-38,430,64,12,'#ffdd62');c.font='900 25px Nunito, sans-serif';c.textAlign='center';c.fillStyle=INK;c.fillText('ROPE SKIPPING CHALLENGE',0,4);c.restore();
+ // A compact version of the same rope-framed brand hangs above the court.
+ drawGameLogo(c,w/2-220,horizon-124,440,true);
 }
 export function scenePose(engine,time,screen){
  const e=engine?.current;return {phase:screen==='gameplay'?(e?.phase||0):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
 }
 // Quadratic rope path: at the collision phase its midpoint is just above the feet.
-export function holderGrip(x,floor,scale,flip,phase){const s=scale*.75;return [x+(flip?-1:1)*77*s,floor-8+(-145+Math.sin(phase)*12)*s];}
+export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*77*s,floor+(-145+Math.sin(phase)*12)*s];}
 export function cartoonRope(phase,floor,scale=1){
- const start=holderGrip(180,floor,scale,false,phase),end=holderGrip(820,floor,scale,true,phase),y=start[1],cos=Math.cos(phase),mid=Math.min(floor-8,y+cos*(cos>=0?floor-y-8:240*scale)+Math.sin(phase)*25*scale);
+ const start=holderGrip(130,floor,scale,false,phase),end=holderGrip(870,floor,scale,true,phase),y=start[1],cos=Math.cos(phase),mid=Math.min(floor-8,y+cos*(cos>=0?floor-y-8:360*scale)+Math.sin(phase)*25*scale);
  return {start,control:[500+Math.sin(phase)*48*scale,2*mid-y],end};
 }
-export function playgroundLayout(h){const horizon=Math.max(65,Math.min(h*.52,h-420));return {horizon,courtTop:horizon+126,spectatorFloor:horizon+165};}
+export function playgroundLayout(h){const horizon=Math.max(65,Math.min(h*.40,h-420));return {horizon,courtTop:horizon+126,spectatorFloor:horizon+165};}
 export function drawSpectator(c,{x,y,scale=.3,time=0,variant=0}){
  c.save();c.translate(x,y);c.scale(scale,scale);const step=Math.sin(time*4),skin=['#b87750','#e8ae7b','#704b3b'][variant%3],shirt=['#e9ae71','#a0c888','#a396bd'][variant%3];
  for(const side of [-1,1]){const footX=side*14+step*side*17;line(c,`M${side*13} -63 Q${footX} -34 ${footX} -8`,INK,13);box(c,footX-11,-8-Math.max(0,step*side*12),29,13,5,'#eee4c9');line(c,`M${side*23} -130 Q${side*45} -103 ${side*35-step*side*10} -83`,skin,11);}
@@ -97,4 +97,35 @@ export function drawSpectator(c,{x,y,scale=.3,time=0,variant=0}){
  else if(variant===1){path(c,'M-31 -167 Q-46 -210 -7 -216 Q26 -225 33 -184 L20 -192 Q-3 -178 -24 -190Z','#6d3c30');oval(c,-25,-207,18,19,'#6d3c30');}
  else{path(c,'M-32 -191 Q-31 -219 4 -213 Q31 -210 31 -190Z','#e9e1cb');path(c,'M-20 -158 Q0 -136 23 -159 Q14 -130 -6 -139Z','#5f3b2b');}
  if(variant!==0){oval(c,-10,-174,3,5,INK,null);oval(c,12,-174,3,5,INK,null);}line(c,'M-8 -157 Q1 -151 12 -158',INK,2);c.restore();
+}
+
+export function courtActors(pixelWidth,pixelHeight,gameplay=true){
+ const h=1000*pixelHeight/pixelWidth,controls=Math.min(220,Math.max(180,pixelHeight*.28))*1000/pixelWidth;
+ const floor=gameplay?Math.min(h-controls,h*.69):h*.72;
+ const scale=Math.min(1.08,Math.max(.45,(floor-210)/360));
+ return {h,floor,scale,positions:[130,500,870]};
+}
+export function drawSkyTraffic(c,w,h,t){
+ const {horizon}=playgroundLayout(h),ceiling=Math.max(110,horizon-95);
+ c.save();c.beginPath();c.rect(0,0,w,ceiling);c.clip();
+ for(let i=0;i<5;i++){const x=((i*270+t*(22+i*5))%(w+240))-120,y=Math.min(ceiling-25,h*(.19+i%3*.07));c.save();c.translate(x,y);path(c,'M-71 10 Q-85 -16 -52 -22 Q-45 -57 -12 -39 Q20 -61 42 -27 Q82 -28 73 9 Q20 26 -71 10Z','#fff9e7','#668b91',2);c.restore();}
+ // A small propeller plane passes well behind the court.
+ c.save();c.translate(((t*42+160)%(w+280))-140,Math.min(ceiling-50,h*.29)+Math.sin(t*.4)*9);c.rotate(-.055);c.scale(.8,.8);
+ path(c,'M-57 3 L-70 -18 L-53 -16 L-40 -3 L43 -5 Q69 -2 68 9 L-45 12Z','#fff6dc',INK,2.5);path(c,'M-8 -4 L-28 -37 L-7 -35 L21 3Z','#e89272',INK,2.5);path(c,'M1 10 L-18 34 L2 32 L27 9Z','#e89272',INK,2.5);box(c,25,-9,22,13,5,'#8bc7dc');line(c,`M70 ${-22*Math.cos(t*24)} L70 ${22*Math.cos(t*24)}`,INK,3);c.restore();
+ // A friendly original helicopter, rotor and skids animated independently.
+ c.save();c.translate(w+130-((t*33+620)%(w+260)),Math.min(ceiling-35,h*.22)+Math.sin(t*.8)*8);c.scale(.67,.67);
+ path(c,'M-30 0 L-78 -14 L-83 -28 L-93 -28 L-88 0 L-33 17Z','#e9b65f',INK,3);oval(c,0,8,40,27,'#e9b65f',INK,3);path(c,'M8 -16 Q43 -9 38 14 L8 14Z','#a5dbe2',INK,2.5);line(c,'M-17 31 V42 M18 31 V42 M-34 42 H39 M0 -19 V-33',INK,3);line(c,`M${-66*Math.cos(t*32)} -35 L${66*Math.cos(t*32)} -35`,INK,4);line(c,`M-89 ${-3-13*Math.sin(t*30)} L-89 ${-3+13*Math.sin(t*30)}`,INK,3);c.restore();c.restore();
+}
+// Original rope-framed lettering: each letter has its own animated-cartoon tilt.
+export function drawGameLogo(c,x,y,width=500,compact=false){
+ c.save();c.translate(x,y);c.scale(width/500,width/500);
+ const letters=(text,y,size,spacing,fill)=>{const start=250-(text.length-1)*spacing/2;c.textAlign='center';c.font=`900 ${size}px Nunito, sans-serif`;c.lineJoin='round';for(let i=0;i<text.length;i++){c.save();c.translate(start+i*spacing,y+Math.sin(i*1.3)*3);c.rotate(Math.sin(i*1.7)*.075);c.strokeStyle=INK;c.lineWidth=compact?4:6;c.strokeText(text[i],0,0);c.fillStyle=fill;c.fillText(text[i],0,0);c.restore();}};
+ if(compact){box(c,22,9,456,94,21,'#55bdc4');c.beginPath();c.roundRect(21,8,458,96,22);c.strokeStyle=INK;c.lineWidth=11;c.stroke();c.strokeStyle='#f8d35b';c.lineWidth=7;c.stroke();c.save();c.setLineDash([3,10]);c.strokeStyle='#fff1ba';c.lineWidth=1.5;c.stroke();c.restore();letters('ROPE SKIPPING',53,37,31,'#ffe47a');c.font='900 24px Nunito';c.fillStyle='#fff9df';c.textAlign='center';c.fillText('CHALLENGE',250,88);c.restore();return;}
+ path(c,'M66 46 Q91 6 145 33 Q210 0 257 24 Q322 -1 363 31 Q429 9 451 62 Q491 100 459 144 Q491 197 437 229 Q382 267 323 238 Q245 268 191 241 Q105 264 64 223 Q17 207 44 151 Q8 85 66 46Z','#4bb8c6',INK,3);
+ path(c,'M35 143 C1 54 61 5 144 29 Q250 -11 361 29 C443 4 498 56 465 143',null,INK,14);path(c,'M35 143 C1 54 61 5 144 29 Q250 -11 361 29 C443 4 498 56 465 143',null,'#ffda62',9);c.save();c.setLineDash([4,11]);path(c,'M35 143 C1 54 61 5 144 29 Q250 -11 361 29 C443 4 498 56 465 143',null,'#fff4c6',2);c.restore();
+ for(const [hx,angle,col] of [[35,-.25,'#ed80a0'],[465,.25,'#72b7e0']]){c.save();c.translate(hx,147);c.rotate(angle);box(c,-14,-7,28,72,12,col);line(c,'M-12 9 H12 M-12 28 H12 M-11 46 H11','#fff7dd',3);c.restore();}
+ letters('ROPE',93,78,58,'#ffe36a');letters('SKIPPING',166,67,45,'#ffe36a');
+ path(c,'M85 184 Q250 165 416 184 L402 233 Q250 252 99 233Z','#326eac',INK,3);c.font='900 31px Nunito';c.textAlign='center';c.fillStyle='#fff9e4';c.fillText('CHALLENGE',250,221);
+ for(const [sx,sy] of [[68,88],[434,91],[75,236],[431,236]]){path(c,`M${sx} ${sy-8} l3 6 7 2 -7 3 -3 7 -3 -7 -7 -3 7 -2Z`,'#fff5ce',INK,1.5);}
+ c.restore();
 }

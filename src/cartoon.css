@@ -317,3 +317,17 @@ em { color:#d54f6e; }
 @media(max-height:650px){.app .dice-showcase.cartoon-die{width:52px!important;height:66px!important}.app .cartoon-die svg{width:52px;height:52px}.app .powerup-bar.tools-open{bottom:calc(170px + env(safe-area-inset-bottom,0px)) !important}}
 .app .roll-button { min-height:47px; max-width:230px; padding:8px 10px; font-size:clamp(12px,1.8vw,20px); }
 .app .cartoon-die span { font-size:9px; }
+/* Rope-framed original brand and roomier phone court. */
+.app .home-logo { top:14%; width:min(520px,86vw); }
+.brand-logo { display:block; width:100%; height:auto; }
+.app .home-logo p { font-size:13px; margin-top:4px; }
+.app .cartoon-die { pointer-events:auto !important; padding:0; cursor:pointer; touch-action:manipulation; }
+.app .cartoon-die:disabled { cursor:default; }
+.app .cartoon-die:not(:disabled):active svg { transform:scale(.9) rotate(-5deg); }
+.app .cartoon-die span { font-size:9px; }
+.app .combo { color:#713c25; background:#fff0ba; border:1px solid #26313b; border-radius:8px; padding:4px 8px; font-size:10px; }
+.app .reward-summary { width:100%; flex-wrap:wrap; gap:12px; padding:10px; border-radius:13px; }
+@media(max-height:650px){.app .home-logo{top:14%;width:min(380px,57vw)}.app .home-logo p{font-size:11px}}
+.app .reward-summary { background:transparent; border:0; padding:0; }
+.app .reward-summary>span { flex:1; min-width:88px; padding:9px; border:1px solid #26313b; border-radius:12px; background:#fff3cd; }
+.app .reward-summary>svg { color:#b37e26; }

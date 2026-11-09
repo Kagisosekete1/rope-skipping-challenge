@@ -25,6 +25,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       "004_avatar_storage.sql",
       "005_progress_and_deletion.sql",
       "006_live_updates.sql",
+      "007_six_roll_again.sql",
     ])
       await db.exec(
         await readFile(new URL("../supabase/" + file, import.meta.url), "utf8"),
@@ -42,6 +43,7 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       ),
     );
     await db.exec(await readFile(new URL("../supabase/006_live_updates.sql",import.meta.url),"utf8"));
+    await db.exec(await readFile(new URL("../supabase/007_six_roll_again.sql",import.meta.url),"utf8"));
     await db.query("insert into auth.users(id) values($1),($2),($3)", [
       A,
       B,
@@ -138,6 +140,12 @@ test("online escrow, server scoring, public leaderboard and gallery policies are
       "roll",
       "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
     ]);
+    await admin();
+    await db.query("update public.challenge_rooms set state=state||jsonb_build_object('state','rolling','needed',6,'deadline',extract(epoch from clock_timestamp())*1000-1) where id=$1",[id]);
+    await as(A);
+    const six=await rpc("select public.challenge_action($1,'poll',gen_random_uuid()) as result",[id]);
+    assert.equal(six.state,'idle');assert.equal(six.reroll,true);assert.equal(six.current,0);assert.deepEqual(six.progress,[0,0]);assert.equal(six.wallet.points,950);
+    await rpc("select public.challenge_action($1,'roll',gen_random_uuid()) as result",[id]);
     await admin();
     await db.query(
       "update public.challenge_rooms set state=state||jsonb_build_object('state','skipping','period_ms',1900,'next_crossing',extract(epoch from clock_timestamp())*1000+1800) where id=$1",

@@ -302,7 +302,7 @@ export default function App({ splashDelay = 1800 }) {
       engine.current = new Match(setMatch);
     }
     rewarded.current = false;
-    engine.current.reset(mode, difficulty);
+    engine.current.reset(mode, difficulty, save.level);
     setScreen("gameplay");
   }
   function startOnline(data) {
@@ -523,7 +523,7 @@ export default function App({ splashDelay = 1800 }) {
         />
       </div>
       <div className="vignette" />
-      {screen === "gameplay" && <CartoonDie value={lastDie.current} rolling={current.state==='rolling'}/>}
+      {screen === "gameplay" && <CartoonDie value={lastDie.current} rolling={current.state==='rolling'} reroll={current.reroll} onRoll={roll} canRoll={current.state==='idle'&&!current.paused&&!engine.current.ai&&!engine.current.isSpectating}/>}
       {screen === "welcome" && (
         <main
           className="welcome screen-enter"
@@ -567,8 +567,7 @@ export default function App({ splashDelay = 1800 }) {
             <div className="balance-stack"><button className="wallet" onClick={() => go("shop")} aria-label="Cosmetic coins"><Coin /><span>{save.coins.toLocaleString()}<small>COINS · SHOP</small></span><Icon name="plus" /></button><button className="online-points-badge" onClick={()=>go("leaderboard")}><b>{account.user ? account.wallet ? Number(account.wallet.points).toLocaleString() : "…" : "SIGN IN"}</b><small>ONLINE POINTS · RANKS</small></button></div>
           </div>
           <div className="home-logo">
-            <span>ROPE SKIPPING</span>
-            <strong>CHALLENGE</strong>
+            <img className="brand-logo" src={import.meta.env.BASE_URL+"branding/rope-skipping-logo.png"} alt="Rope Skipping Challenge — rope-framed cartoon logo"/>
             <p>A little rhythm. A whole lot of joy.</p>
           </div>
           <section className="home-actions">
@@ -816,7 +815,7 @@ export default function App({ splashDelay = 1800 }) {
               <Icon name="jump" size={36} />
               <strong>
                 {current.done}
-                <small>/ {current.needed || "–"}</small>
+                <small>/ {current.reroll ? "–" : current.needed || "–"}</small>
               </strong>
               <span>Jumps</span>
             </div>
@@ -841,7 +840,7 @@ export default function App({ splashDelay = 1800 }) {
                   className="roll-button"
                 >
                   {current.state === "idle"
-                    ? "Roll the dice"
+                    ? current.reroll ? "Six! Roll again" : "Roll the dice"
                     : current.state === "rolling"
                       ? "Rolling…"
                       : current.state === "ready"

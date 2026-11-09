@@ -106,9 +106,11 @@ export class Match {
     this.random = random;
     this.reset("cpu", "Normal");
   }
-  reset(mode = "cpu", difficulty = "Normal") {
+  reset(mode = "cpu", difficulty = "Normal", level = 1) {
     this.mode = mode;
     this.difficulty = difficulty;
+    this.level = Math.max(1,Number(level)||1);
+    this.reroll = false;
     this.current = 0;
     this.progress = [0, 0];
     this.powers = [
@@ -143,6 +145,7 @@ export class Match {
       state: this.state,
       mode: this.mode,
       difficulty: this.difficulty,
+      reroll: this.reroll,
       current: this.current,
       progress: [...this.progress],
       needed: this.needed,
@@ -164,12 +167,13 @@ export class Match {
   }
   get period() {
     return (
-      Math.max(1.05, 1.9 - this.done * 0.09) *
+      Math.max(1.05, ({Easy:2,Normal:1.82,Hard:1.62}[this.difficulty]||1.82) - Math.min(.25,Math.floor((this.level-1)/5)*.025) - this.done * .09) *
       (this.effects[this.current].slow ? 1.35 : 1)
     );
   }
   roll() {
     if (this.state !== "idle" || this.paused) return false;
+    this.reroll=false;
     this.needed = randomDie(this.random);
     this.done = 0;
     this.state = "rolling";
@@ -254,6 +258,7 @@ export class Match {
       return;
     }
     if (this.state === "rolling" && this.elapsed > 1.7) {
+      if(this.needed===6){this.state="idle";this.reroll=true;this.elapsed=0;this.feedback="Six! Tap the die to roll again — same turn!";this.emit();return;}
       this.state = "ready";
       this.elapsed = 0;
       this.readyStartPhase = this.phase;
@@ -363,11 +368,12 @@ export class Match {
     }
   }
   aiPlan() {
+    if(this.ai&&this.difficulty!=="Easy"){if(this.progress[1]>=35&&this.powers[1].boost)this.usePower("boost",1);if(this.progress[1]>=60&&this.powers[1].shield)this.usePower("shield",1);}
     const err =
-      { Easy: 0.28, Normal: 0.15, Hard: 0.055 }[this.difficulty] ?? 0.15;
+      { Easy: 0.24, Normal: 0.10, Hard: 0.035 }[this.difficulty] ?? 0.15;
     this.aiSkipped =
       this.random() <
-      ({ Easy: 0.17, Normal: 0.08, Hard: 0.02 }[this.difficulty] ?? 0.08);
+      ({ Easy: 0.12, Normal: 0.035, Hard: 0.008 }[this.difficulty] ?? 0.08);
     const next = (Math.floor(this.phase / TAU) + 1) * TAU;
     this.aiAt =
       next - (TAU * (0.38 + (this.random() - 0.5) * err * 2)) / this.period;

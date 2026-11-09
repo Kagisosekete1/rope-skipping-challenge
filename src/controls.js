@@ -5,7 +5,7 @@ export function jumpTap(match,now=performance.now()){
  if(match.frozen?.[match.current]||match.frozenUntil?.[match.current]>match.time)return 'frozen';
  if(match.jump())return 'jump';
  if(match.state==='skipping')return 'recovering';
- if(match.state==='idle')match.roll();
+ if(match.state==='idle'&&!match.reroll)match.roll();
  match.previewJumpAt=now;match.previewJumpAge=0;match.previewJumpSlot=match.current;return 'warmup';
 }
 export function jumpEnergy(match,actor){

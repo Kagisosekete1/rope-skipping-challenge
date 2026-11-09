@@ -67,6 +67,7 @@ test("navigation survives splash removal; real controls, purchases and saves kee
       document.querySelector(".gameplay"),
       "mode Play reaches gameplay",
     );
+    globalThis.uiTestEngine.random=()=>.4;
     assert.equal(button("JUMP").disabled,false,"Jump is available before rolling");
     await click(button("JUMP"));
     assert.ok(globalThis.uiTestEngine.previewJumpAt>0,"first tap responds with a warm-up hop");
