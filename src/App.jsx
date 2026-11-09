@@ -1,17 +1,12 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { View, PerspectiveCamera, RoundedBox } from "@react-three/drei";
 import gsap from "gsap";
-import Scene from "./Scene";
-import { Character, Outfit, Shoe } from "./Character";
-import { Robot } from "./Robot";
+import Scene, { CartoonPreview, CartoonDie, CartoonItem } from "./CartoonScene";
 import Profile from "./Profile";
 import { SettingsExtras } from "./SettingsExtras";
 import { useCloudProgress } from "./useCloudProgress";
 import { useAccount } from "./useAccount";
 import { Leaderboard, OnlineLobby } from "./Community";
 import { OnlineMatch } from "./online";
-import { Dice } from "./Scene";
 import { Match, ITEMS, COLORS, SKIN, loadSave } from "./game";
 import { tone, music, unlockMusic, playVictory, stopVictory } from "./audio";
 function Icon({ name, size = 26 }) {
@@ -84,85 +79,8 @@ function Heading({ first, accent }) {
     </h1>
   );
 }
-function ItemPreview({ category, item, index }) {
-  return (
-    <View className="item-model" index={index + 1}>
-      <PerspectiveCamera makeDefault position={[0, 0.05, 4]} fov={33} />
-      <ambientLight intensity={1.9} />
-      <directionalLight position={[-2, 4, 4]} intensity={3} />
-      <directionalLight position={[3, 1, -2]} intensity={2} color="#82dfff" />
-      <group rotation={[0, -0.25, 0]}>
-        {category === "outfit" ? (
-          <Outfit color={item.color} />
-        ) : category === "hair" ? (
-          <Character
-            kind={0}
-            look={{ outfit: 0, hair: index, shoes: 0, skin: 2 }}
-            scale={1.1}
-            position={[0, -1.9, 0]}
-            preview
-          />
-        ) : category === "shoes" ? (
-          <group scale={3} position={[0, -0.25, 0]}>
-            <group position={[-0.15, 0, 0]}>
-              <Shoe color={item.color} />
-            </group>
-            <group position={[0.15, 0, 0]}>
-              <Shoe color={item.color} />
-            </group>
-          </group>
-        ) : (
-          <mesh rotation={[0.65, 0.3, 0]}>
-            <torusGeometry args={[0.65, 0.065, 12, 64]} />
-            <meshStandardMaterial
-              color={item.color}
-              metalness={0.25}
-              roughness={0.3}
-            />
-          </mesh>
-        )}
-      </group>
-    </View>
-  );
-}
-function ModePreview({ mode, looks }) {
-  return (
-    <View className="mode-art mode-model" index={mode === "cpu" ? 1 : 2}>
-      <PerspectiveCamera makeDefault position={[0, 1.53, 4.2]} fov={32} />
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[-2, 3, 4]} intensity={3.3} />
-      <directionalLight position={[2, 3, -2]} intensity={2} color="#9bedff" />
-      {mode === "cpu" ? (
-        <Robot position={[-0.52, -0.27, 0]} scale={0.95} rotation={0.15} />
-      ) : (
-        <Character
-          kind={1}
-          look={looks[1]}
-          position={[-0.52, -0.27, 0]}
-          scale={0.95}
-          rotation={0.18}
-          preview
-        />
-      )}
-      <Character
-        kind={mode === "cpu" ? 0 : 2}
-        look={looks[mode === "cpu" ? 0 : 2]}
-        position={[0.52, -0.27, 0]}
-        scale={0.95}
-        rotation={-0.15}
-        preview
-      />
-    </View>
-  );
-}
-function ViewClear() {
-  useFrame(({ gl }) => {
-    gl.setScissorTest(false);
-    gl.setClearColor(0x000000, 0);
-    gl.clear(true, true);
-  }, 0);
-  return null;
-}
+function ItemPreview(props) { return <CartoonItem {...props}/>; }
+function ModePreview({mode,looks}) { return <CartoonPreview className="mode-art mode-model" mode robot={mode==='cpu'} looks={looks}/>; }
 export default function App({ splashDelay = 1800 }) {
   const account = useAccount();
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -584,32 +502,7 @@ export default function App({ splashDelay = 1800 }) {
         />
       </div>
       <div className="vignette" />
-      {(["shop", "select"].includes(screen) ||
-        screen === "gameplay") && (
-        <div className="shop-render">
-          <Canvas
-            eventSource={root}
-            dpr={[1, 1.3]}
-            gl={{ alpha: true, antialias: true }}
-          >
-            <ViewClear />
-            <View.Port />
-          </Canvas>
-        </div>
-      )}
-      {screen === "gameplay" && (
-          <View className="dice-showcase" index={1}>
-            <PerspectiveCamera makeDefault position={[0, 0, 3.6]} fov={40} />
-            <ambientLight intensity={1.7} />
-            <directionalLight position={[-3, 4, 5]} intensity={3.2} />
-            <Dice
-              position={[0, 0, 0]}
-              value={lastDie.current}
-              rolling={current.state === "rolling"}
-              scale={1.2}
-            />
-          </View>
-        )}
+      {screen === "gameplay" && <CartoonDie value={lastDie.current} rolling={current.state==='rolling'}/>}
       {screen === "welcome" && (
         <main
           className="welcome screen-enter"
@@ -630,7 +523,7 @@ export default function App({ splashDelay = 1800 }) {
               PLAY <Icon name="play" size={44} />
             </Button>
             <p>Roll the dice. Find your rhythm. Reach 100%.</p>
-            <span className="tiny">REAL 3D • BIG SMILES • ONE MORE JUMP</span>
+            <span className="tiny">BIG PERSONALITIES • ONE MORE JUMP</span>
           </div>
         </main>
       )}
@@ -1012,9 +905,9 @@ export default function App({ splashDelay = 1800 }) {
             <span>
               {
                 [
-                  "Pink ponytail · Big playground energy",
-                  "Blue hoodie · Cool under pressure",
-                  "Yellow cap · Always bringing sunshine",
+                  "Poppy · Big playground energy",
+                  "Ziggy · Cool under pressure",
+                  "Sunny · Always bringing sunshine",
                 ][selection]
               }
             </span>

@@ -3,17 +3,18 @@ import { mkdir, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 await mkdir(".test-tmp", { recursive: true });
+const clock = process.argv[2] === "clock";
 const progress = process.argv[2] === "progress";
 const account = process.argv[2] === "account",
   online = process.argv[2] === "online";
-const path = progress ? ".test-tmp/progress-ui.mjs" : online
+const path = clock ? ".test-tmp/cartoon-clock.mjs" : progress ? ".test-tmp/progress-ui.mjs" : online
   ? ".test-tmp/online-ui.mjs"
   : account
     ? ".test-tmp/account-ui.mjs"
     : ".test-tmp/navigation.mjs";
 await build({
   entryPoints: [
-    progress ? "tests/progress-ui.jsx" : online
+    clock ? "tests/cartoon-clock.jsx" : progress ? "tests/progress-ui.jsx" : online
       ? "tests/online-ui.jsx"
       : account
         ? "tests/account-ui.jsx"
@@ -37,7 +38,7 @@ await build({
         b.onResolve({ filter: /^\.\/supabase$/ }, () => ({
           path: resolve("tests/mocks/supabase.js"),
         }));
-        b.onResolve({ filter: /^\.\/Scene$/ }, () => ({
+        b.onResolve({ filter: /^\.\/(Scene|CartoonScene)$/ }, () => ({
           path: resolve("tests/mocks/Scene.jsx"),
         }));
         b.onResolve({ filter: /^@react-three\/fiber$/ }, () => ({

@@ -71,7 +71,7 @@ test("navigation survives splash removal; real controls, purchases and saves kee
     assert.equal(globalThis.uiTestEngine.state, "rolling");
     assert.ok(
       document.querySelector(".dice-showcase"),
-      "rolling has a dedicated visible 3D dice viewport",
+      "rolling has a dedicated visible pip-dice dock",
     );
     await act(async () => {
       for (let i = 0; i < 330; i++) globalThis.uiTestEngine.tick(0.01);

@@ -6,3 +6,7 @@ export default function Scene({ screen, engine }) {
 }
 
 export function Dice(){return null;}
+
+export function CartoonPreview(){return <div data-testid="cartoon-preview"/>;}
+export function CartoonDie({value,rolling}){return <div className="dice-showcase cartoon-die" aria-label={`Die showing ${value} dots`}/>;}
+export function CartoonItem(){return <div data-testid="cartoon-item"/>;}

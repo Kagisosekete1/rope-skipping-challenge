@@ -1,83 +1,43 @@
-# Rope Skipping Challenge — 3D rebuild
+# Rope Skipping Challenge — Cartoon Edition 3.0
 
-A playable browser game built with React 19, Three.js, React Three Fiber, Drei and GSAP. The welcome scene, characters, playground, rope, dice, product previews and mode previews use actual 3D meshes. No reference image is used as a character, game background or gameplay substitute.
+A complete 2D presentation for the existing playable game. React 19 and GSAP drive the UI; Canvas 2D draws original articulated cartoon characters and layered scenery; SVG draws pip dice and shop items. The old Three.js renderer and dependencies have been removed. No character or artwork from an existing television show is used.
 
-## Run
+## Run and verify
 
-Requires Node.js 22.12+ (Node 24 is also supported).
+Node 22.12+ (or Node 24):
 
 ```sh
 npm ci
 npm run dev
-```
-
-Open the local address printed by Vite. For another device on the same network, use the host computer's LAN IP and Vite's port. For an installable phone version, serve the production build over HTTPS.
-
-```sh
 npm test
 npm run test:scene
 npm run test:ui
 npm run build
-npm run preview
 ```
 
-Deploy the `dist/` directory to a static host. All runtime scripts and fonts are bundled locally. Production includes a generated service worker and app manifest for installation and offline loading after the first successful visit. Use `npm run build` whenever changing the source. GitHub source storage does not itself deploy the game.
+The production build is `dist/`. `.openai/hosting.json` binds the existing hosted Site. Source is also saved to GitHub. A generated service worker caches the shell; music streams separately. Accounts and online play require internet.
 
-## Play
+## Art and animation
 
-Welcome → Play → Home → Let's Play → Select Mode → Play.
+- `src/cartoon-art.js`: shared original character drawing, skin/outfit/hair/shoe palettes, ponytail/bun/puffs and braids, large expressive eyes, blinks, smiles, miss reactions, BeatBot, rubber-hose limbs, walking, win dance, squash/stretch and the rope curve.
+- `src/CartoonScene.jsx`: one animation loop, engine clock integration, background caching, independent cloud/walker/bird layers, jump motion lines, landing dust and reward confetti. Background palettes change as levels increase, with no designed final level.
+- `src/cartoon.css`: cohesive ink borders, flat cel colours, paper panels, chunky buttons, cartoon progress bars and all screen styling. `styles.css` retains the established responsive layout rules.
+- `CartoonPreview`, `CartoonItem`, `CartoonDie`: reusable crew/mode/item artwork and a permanently visible dot-only die in its own control dock.
+- `scripts/cartoon-icons.mjs`: generates matching PWA/Android launcher artwork.
+- `scripts/render-cartoon.mjs`: native Canvas artwork review sheets (not browser screenshots).
 
-- Solo: compete against the computer at Easy, Normal or Hard.
-- Two players: take turns on the same device.
-- Roll the pip die. Clear that many jumps to earn a 5% bonus.
-- Tap JUMP just before the rope reaches the feet, when the needle enters green.
-- Every successful jump gives 5%; a perfect gives another 2%.
-- A miss ends the turn; first to 100% wins.
-- Desktop: Space rolls/jumps; Escape pauses. On mobile use the on-screen controls.
-- The match pauses when the tab is hidden.
+Static scenery is cached instead of rebuilt every frame. Preview canvases redraw only when selections change. Device pixel ratio is capped at 1.7 (1 in Battery saver); the runtime contains no WebGL or sprite-atlas download requirement. The renderer follows requestAnimationFrame and targets smooth play, but 60 FPS on every phone is not guaranteed or physically verified.
 
-Completed solo wins award 250 coins and 50 XP; losses 80 coins and 20 XP. A two-player match awards 200 coins. Rewards are issued once per completed match. Progress, purchases, character looks and settings save on the current browser/device. Player names and crew avatars can also sync through Supabase accounts.
+## Preserved gameplay and account features
 
-## Screens
+Welcome, Home, Select Mode, Gameplay, Customization, Match Rewards, Shop, Profile, Leaderboard, Online Lobby and Settings remain available. The rules are unchanged: roll 1–6 pips, tap just before the rope reaches the feet, earn 5% per jump plus 2% for perfect timing and 5% for clearing a roll. A miss ends the turn; first to 100% wins. Solo difficulty and same-device two-player play remain. Space rolls/jumps; Escape pauses.
 
-Welcome features an extruded 3D logo, animated skipping and a gold Play button. Home links to mode selection, customization and My Profile. Select Mode includes live 3D character/robot previews. Gameplay has a pip-only 3D die, timing meter, progress bars, jump feedback, turn handling and pause/quit. Customization changes the crew's outfits, hair colors/styles, skin tones, shoes and rope. Match Rewards shows the earned coins, XP and best streak. The Shop displays 3D items, charges earned coins, unlocks items and equips owned ropes. Settings controls sound, the five-track Rope Rush playlist at 40% volume, and rendering quality, explains the rules, shows statistics, installs the app and offers a confirmed progress reset.
+Block, Shield, Slow, Boost and paid Freeze remain in the compact Tools drawer. Cloud online points, invitation stakes, escrow, payouts and server scoring are unchanged. Guest practice points are separate from trusted online points. Card purchases are **Coming soon**; no payments are collected.
 
-No online multiplayer, global leaderboard, real-money purchase or ad service is implied by these local game modes.
+Every victory advances a level. Existing local storage (`rsc_v2`, guest and per-account caches), owned cosmetics, settings and progress are preserved. Signed-in cloud progress uses `practice_progress`; this redesign needs **no new database migration**. The applied migrations through `005_progress_and_deletion.sql` remain valid. Settings includes About, FAQ, Privacy, Terms, account deletion and installation/sharing.
 
-## 3D implementation
+The five supplied Rope Rush tracks still play at 40% effective gain. A human victory pauses the playlist and plays the supplied cheer immediately when sound effects are enabled.
 
-- `src/Character.jsx`: shared procedural character system, rounded lathed torso, joint hierarchies for shoulders/elbows/hips/knees, detailed eyes with highlights and blinking, brows, mouth/teeth, ears/earrings, curved hair strands/curls/braids, hoodie seams/pockets/drawstrings, trainers and laces. All screens use this same source.
-- `src/Scene.jsx`: PBR materials, soft directional shadows, contact-shadow pass on higher quality, locally rendered studio environment, sky, court, procedural graffiti texture, fence, trees and buildings. 3D dice have six pip faces and GSAP rotation.
-- `src/rope.js`: driven position-based rope simulation with inertia, gravity, length constraints, hand anchors and ground constraints. The holders drive its swing. Gameplay evaluates a predictable crossing phase so physics jitter cannot cause unfair misses; this is not a general rigid-body contact solver.
-- `src/game.js`: rendering-independent match state machine.
-- `src/App.jsx`: screen flow, live 3D item previews through shared Drei Views, local economy and controls.
-- `src/styles.css`: responsive glossy interface and neon-bordered panels.
+## Verification limits
 
-Auto quality caps pixel density and disables the contact-shadow pass on devices reporting four or fewer logical cores; Battery saver forces this tier. Main shadows are 1024 or 2048 according to quality. These are conservative settings, not measured phone FPS guarantees.
-
-## Art quality and validation
-
-The seven supplied images guide the pink ponytail girl, blue curly-haired boy, yellow cap/braids girl, gold rope, pink court, saturated playground and blue/gold interface. The implementation is original procedural 3D, not an exact reproduction of the illustrations. Sculpted silhouette transitions, garment folds and film-quality facial deformation still need artist-made assets to approach the reference fidelity. See `ART-ASSETS.md` for precise requirements.
-
-Automated checks cover dice range, jump arc/cooldown, perfect scoring and bonuses, miss handling, pause, turn changes, rounds, winning, a complete AI match, save fallback and rope stability/anchors/ground/pause. Six additional scene-graph tests mount all three characters and hairstyle variants, advance their joint animations, verify finite mesh transforms and check world-space rope grip anchors using React Three Fiber’s mock renderer; the dice test checks 21 pips and no text geometry. The added scene checks keep rope holders grounded and align the welcome jump with the rope crossing. A DOM integration regression test traverses Welcome, Home, mode selection, a scored jump, pause/quit, shop purchase, customization, settings and rewards after React removes the splash. Its GPU layer is mocked; these are not GPU-rendered screenshots. A production build is also required before release.
-
-This rebuild has not yet received visual browser QA or physical-phone performance measurement: this session did not expose the managed shared-browser control tool. Do not interpret a passing production build or rules tests as visual acceptance. Verify Welcome first, then every screen at 390×844, 768×1024 and 1440×900, plus touch input, full matches, shop/save/reload, audio, installation and offline reload on real devices.
-
-## Licensing
-
-Three.js attribution is in `public/licenses/THREE.txt`; bundled Helvetiker font attribution is in `public/fonts/LICENSE.txt`; Nunito uses the SIL Open Font License in `public/fonts/OFL-nunito.txt`. Dependency licenses remain with their packages. Original supplied reference crops are kept in `reference/` for art direction only; they are not loaded by the game.
-
-## 2.0.1 repair
-
-The splash now leaves the tree through React state rather than direct DOM removal, which invalidated React's next-screen insertion anchor and could unmount the UI. Rope holders no longer inherit the jumper's airborne motion. A shared phase is evaluated before character poses and the rope solver, and the welcome jump is centered on the underfoot crossing. The loop now sweeps from court level to 3.35 world units, above the grounded jumper's head. Wind-up moves continuously around the jumper, and turn changes preserve the current rope angle. The service worker prefers fresh HTML for online navigation while retaining an offline fallback.
-
-## 2.1 — profiles, Rope Rush and BeatBot
-
-- Home → the player name / My Profile opens the profile screen. Players can save a guest name/avatar or create an email/password account, confirm the email, sign in, save their account profile and sign out. Supabase setup and the complete eleven-table schema are in [`supabase/README.md`](supabase/README.md). Names/avatars sync now; gameplay progress and currency remain local until trusted match validation is integrated.
-- The five supplied MP3s replace the synthesized background melody. They stream in order, cycle back to the first song, pause when hidden, and resume after a user gesture. Music volume is 40%, with a Web Audio gain path for mobile browsers that ignore the HTML media volume setting. Music starts enabled once on upgrading to this playlist; later user on/off choices are preserved. Songs are not precached during app installation, so the initial game cache does not download the entire soundtrack.
-- BeatBot is an original, articulated 3D computer competitor. Computer turns, computer victories and the mode preview use the same robot model. The player's crew characters remain human-player characters.
-- Additional tests cover real React name editing/profile navigation, mocked email signup/sign-in/profile-save/sign-out, playlist order/volume/pause, robot turn selection, and the SQL's policies/transactions in embedded PostgreSQL. No real signup email is sent by the test suite.
-
-## 2.2 — challenge update
-
-New: public username/country/gallery-photo leaderboard, server-controlled non-cash point stakes and invitations, Block/Shield/Slow/Boost/paid Freeze, a large pip-dice viewport, victory cheer that immediately silences music, gentler eyes and near-win smiles, rope/ice/shield effects, phone safe-area/keyboard layout handling, updated PWA icons and a compiled Android test APK. See [`ONLINE.md`](ONLINE.md) for rules/database behavior and [`ANDROID.md`](ANDROID.md) for installation/building/sharing. The authenticated schema upgrade is [`supabase/upgrade-2.2.sql`](supabase/upgrade-2.2.sql).
+Automated tests cover game rules, cloud authorization and points escrow, progress restoration, email/profile flows, gallery processing, pip counts, 2D artwork rendering, rope timing and navigation. Native Canvas artwork was rendered and inspected. Browser/physical-phone layout and live two-device play were not available in this execution environment. The Android download is a debug-signed test APK, not a store release. See `ANDROID.md`, `ONLINE.md` and `supabase/README.md`.

@@ -2,9 +2,9 @@ import { build } from "esbuild";
 import { mkdir, unlink } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 await mkdir(".test-tmp", { recursive: true });
-const path = ".test-tmp/character-scene.mjs";
+const path = ".test-tmp/cartoon-scene.mjs";
 await build({
-  entryPoints: ["tests/character-scene.jsx"],
+  entryPoints: ["tests/cartoon-scene.jsx"],
   outfile: path,
   bundle: true,
   format: "esm",

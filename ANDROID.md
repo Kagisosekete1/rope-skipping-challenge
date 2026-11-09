@@ -8,7 +8,7 @@ Open `https://rope-skipping-challenge-kagiso.seketefilmstv.chatgpt.site`.
 - iPhone Safari: Share → Add to Home Screen.
 - Settings → Share game link opens the phone's sharing sheet, or copies the link when supported.
 
-The manifest includes 192/512-pixel icons and a separate maskable icon made from the supplied Rope Skipping artwork. Existing installations can take time to refresh their OS icon; reinstalling the PWA forces a fresh icon.
+The manifest includes 192/512-pixel icons and a separate maskable icon made from the original Cartoon Edition artwork. Existing installations can take time to refresh their OS icon; the operating system may refresh its icon later. Avoid clearing site data to refresh an icon, because guest saves live in that storage.
 
 The game shell and solo/two-player-on-one-device play work offline after a successful cache install. Streaming music, account synchronization, photos, leaderboards and online challenges need a connection. The APK is excluded from offline precaching.
 
@@ -16,7 +16,7 @@ The game shell and solo/two-player-on-one-device play work offline after a succe
 
 Download `https://rope-skipping-challenge-kagiso.seketefilmstv.chatgpt.site/downloads/Rope-Skipping-Challenge-test.apk`.
 
-This is a **debug-signed Android test build**, application ID `com.seketefilms.ropeskipping`, version 2.2.0, minimum Android 6 (API 23), target API 35. A compatible modern Android WebView with WebGL2 is required. It uses Capacitor to open the live HTTPS game. It is a website-backed Android app, not a self-contained offline native port. The native launcher uses the same supplied artwork.
+This is a **debug-signed Android test build**, application ID `com.seketefilms.ropeskipping`, version 3.0.0, minimum Android 6 (API 23), target API 35. A compatible modern Android WebView with Canvas 2D is required. It uses Capacitor to open the live HTTPS game. It is a website-backed Android app, not a self-contained offline native port. The native launcher uses matching original Cartoon Edition artwork.
 
 You can send the APK file or its download link through a sharing platform. Android may ask you to allow installation from your chosen browser/file app. A Play Store release needs your own persistent release-signing key and store setup; this test build is not a store submission.
 
