@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {drawCharacter,drawBackground,scenePose,cartoonRope,holderGrip,drawSpectator,playgroundLayout,courtActors,drawSkyTraffic,drawGameLogo,drawGroundShadow,INK} from './cartoon-art';
+import {drawCharacter,drawBackground,scenePose,cartoonRope,holderGrip,drawHolderGrip,drawSpectator,playgroundLayout,courtActors,drawSkyTraffic,drawGameLogo,drawGroundShadow,INK} from './cartoon-art';
 import ItemArt from './ItemArt';
 import {sceneCast} from './cast';
 import {ropeFrame,drawRopeLayer} from './rope-motion';
@@ -55,8 +55,8 @@ export default function CartoonScene(props){
      drawCharacter(c,{x:870,y,scale,kind:rightKind,look:p.save.looks[rightKind],time,holder:1,phase,flip:true});
      drawCharacter(c,{x:500,y:floor,scale,kind,look:p.save.looks[kind],time,jump:pose.jump,emotion,robot});
      drawRopeLayer(c,nodes,true,ITEMS.rope[p.save.rope]?.color||'#ffdd52',time);
-     // Redraw closed fingers over the rope endpoints so the handles visibly sit inside each fist.
-     for(const [x,flip] of [[130,false],[870,true]]){const [gx,gy]=holderGrip(x,floor,scale,flip,phase);c.save();c.translate(gx,gy+22*scale);c.scale((flip?-1:1)*scale,scale);c.fillStyle=SKIN[p.save.looks[flip?cast.holders[1]:cast.holders[0]]?.skin??2];c.strokeStyle=INK;c.lineWidth=3;c.beginPath();c.roundRect(-14,-9,27,21,7);c.fill();c.stroke();c.beginPath();c.moveTo(-8,-1);c.lineTo(10,1);c.moveTo(-7,6);c.lineTo(9,8);c.stroke();c.restore();}
+     // Use the identical animated grip above the rope; never paint a second static fist.
+     for(const [x,flip] of [[130,false],[870,true]]){const k=cast.holders[flip?1:0];drawHolderGrip(c,{x,y:floor,scale,flip,phase,skin:SKIN[p.save.looks[k]?.skin??(k===1?3:2)]});}
      if(gameplay&&m.combo>=3&&pose.jump>.2){c.save();c.fillStyle='#ffdc68';c.strokeStyle=INK;c.lineWidth=2;for(let i=0;i<5;i++){const a=time*2+i*Math.PI*.4,sx=500+Math.cos(a)*100*scale,sy=floor-210*scale+Math.sin(a)*40*scale;c.beginPath();for(let j=0;j<10;j++){const r=j%2?4:9;c.lineTo(sx+Math.cos(j*Math.PI/5)*r,sy+Math.sin(j*Math.PI/5)*r);}c.closePath();c.fill();c.stroke();}c.restore();}
      if(pose.jump>.1){for(const side of [-1,1]){c.strokeStyle='#fff8df';c.lineWidth=4;c.beginPath();c.moveTo(500+side*65*scale,floor-60);c.lineTo(500+side*74*scale,floor-95);c.stroke();}}
      if(gameplay&&m.result==='miss'&&m.state==='turnEnd'){c.font='900 34px Nunito';c.textAlign='center';c.lineWidth=6;c.strokeStyle=INK;c.fillStyle='#ffe46e';c.strokeText('WHOOPS!',500,floor-340*scale);c.fillText('WHOOPS!',500,floor-340*scale);}

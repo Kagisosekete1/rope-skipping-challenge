@@ -4,8 +4,30 @@ function path(c,d,fill,stroke=INK,width=3.6){c.beginPath();const p=new Path2D(d)
 function oval(c,x,y,rx,ry,color,stroke=INK,lw=2.8){c.beginPath();c.ellipse(x,y,rx,Math.max(.1,ry),0,0,Math.PI*2);c.fillStyle=color;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=lw;c.stroke();}}
 function line(c,d,color=INK,w=5){path(c,d,null,color,w);}
 function box(c,x,y,w,h,r,color){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=color;c.fill();c.strokeStyle=INK;c.lineWidth=4;c.stroke();}
+// The wrist, handle and rope tip all use this same articulated pose.
+export function holderArmPose(phase){return {x:77+Math.cos(phase)*14,y:-213+Math.sin(phase)*22,angle:Math.cos(phase)*.38};}
+function drawHand(c,skin,pose='relaxed'){
+ if(pose==='grip'){
+  line(c,'M0 -23 V19',INK,11);line(c,'M0 -22 V18','#ffcc54',6);
+  path(c,'M-11 -8 Q-11 -14 -3 -13 L9 -10 Q16 -7 12 -1 L12 6 Q9 13 1 12 L-8 9 Q-13 4 -11 -8Z',skin,INK,2.6);
+  line(c,'M-5 -5 L9 -3 M-5 2 L9 4',INK,1.6);
+  path(c,'M-10 -8 Q-16 -10 -16 -3 Q-16 4 -6 7 L0 4 Q2 0 -4 -2Z',skin,INK,2.2);
+ }else if(pose==='fist'){
+  path(c,'M-11 6 L-12 -5 Q-13 -14 -5 -15 Q-2 -20 4 -16 Q12 -18 14 -10 L15 2 Q13 13 3 14 L-6 12Z',skin,INK,2.8);
+  line(c,'M-5 -11 L-5 -6 M2 -13 L2 -7 M9 -10 L9 -5',INK,1.5);
+  path(c,'M-10 -3 Q-17 -5 -16 2 Q-15 10 -4 10 L1 6 Q2 1 -4 1Z',skin,INK,2);
+ }else{
+  // Compact rounded palm, three short fingers and one thumb.
+  path(c,'M-9 9 Q-15 4 -16 -2 Q-17 -9 -12 -9 L-8 -4 L-9 -16 Q-9 -23 -4 -22 Q0 -22 0 -15 L1 -20 Q3 -26 7 -23 Q10 -21 8 -13 L10 -17 Q14 -22 17 -17 Q19 -14 13 -4 L11 5 Q8 14 -1 14Z',skin,INK,2.7);
+  line(c,'M-7 3 Q-2 0 5 3',INK,1.4);
+ }
+}
+export function drawHolderGrip(c,{x,y,scale,flip=false,phase=0,skin}){
+ const p=holderArmPose(phase);c.save();c.translate(x,y);c.scale(flip?-scale:scale,scale);c.translate(p.x,p.y);c.rotate(p.angle);drawHand(c,skin,'grip');c.restore();
+}
 export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,emotion='idle',holder=0,phase=0,walk=false,robot=false,flip=false}={}){
  c.save();c.translate(x,y);c.scale(flip?-scale:scale,scale);
+ const raisedHands=[];
  const shirt=COLORS[look.outfit??kind]||COLORS[0],skin=SKIN[look.skin??(kind===1?3:2)],hair=ITEMS.hair[look.hair??0]?.color||'#402217',shoe=ITEMS.shoes[look.shoes??kind]?.color||shirt;
  const step=walk?Math.sin(time*5):0,bounce=holder?0:walk?Math.abs(step)*4:0,win=emotion==='win',miss=emotion==='miss',excited=win||emotion==='happy',anticipate=emotion==='ready'?Math.sin(time*5)*.03:0;
  c.translate(0,-jump*92-bounce);if(win)c.rotate(Math.sin(time*6)*.055);const stretch=jump>0?1+.07*Math.sin(jump*Math.PI):1+anticipate;c.scale(1/stretch,stretch);
@@ -30,13 +52,21 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  }else{
  // Sunny's braids sit behind her shoulders, ears and face.
  if(kind===2)for(const side of [-1,1])for(let i=0;i<4;i++)oval(c,side*(62+i*2),-214+i*18,10-i*.5,13,hair,INK,2.5);
- // Waving sleeves and three-finger cartoon hands.
- for(const side of [-1,1]){const hx=holder?side*74+(side===1?Math.cos(phase)*6:0):win?side*100:side*(79+jump*12),hy=holder?-213+Math.sin(phase)*12:win?(side<0?-210:-265)+Math.sin(time*5+side)*3:-111-jump*35+(walk?step*side*12:0);
- path(c,`M${side*35} -167 Q${side*64} -158 ${hx} ${hy-13} L${hx-side*20} ${hy+10} Q${side*43} -130 ${side*28} -132Z`,shirt);
- c.save();c.translate(hx,hy);
- if(win){c.rotate(-side*.12);c.scale(side===-1?-1:1,1);oval(c,1,-2,15,17,skin,INK,2.5);line(c,'M-5 -10 Q0 -13 5 -10 M-5 -4 Q1 -7 6 -4',INK,1.5);path(c,'M-10 5 Q-20 0 -16 -8 Q-11 -14 -6 -5 L1 1 Q3 8 -4 9Z',skin,INK,2);}
- else if(holder&&side===1){line(c,'M3 -22 V21',INK,13);line(c,'M3 -20 V19','#ffcc54',7);path(c,'M-13 -7 Q-13 -17 -3 -14 L14 -10 Q21 -6 15 1 Q18 10 9 13 L-9 10 Q-17 4 -13 -7Z',skin,INK,3);line(c,'M-7 -4 L11 -1 M-7 3 L10 6',INK,2);path(c,'M-11 -12 Q-3 -20 3 -10 L8 -5 Q9 3 2 2 L-9 -4Z',skin,INK,2.5);}
- else{c.rotate(side*.35);path(c,'M-11 -7 Q-21 -20 -12 -22 L-3 -15 Q-6 -33 2 -33 Q9 -33 9 -16 Q13 -34 20 -28 Q24 -24 18 -11 Q35 -18 35 -9 Q30 1 16 6 Q1 14 -11 -7Z',skin,INK,3);}c.restore();}
+ // Rounded articulated sleeves: shoulder -> elbow -> wrist, with a separate cuff.
+ for(const side of [-1,1]){
+  const grip=holder&&side===1,p=holderArmPose(phase);
+  const hx=grip?p.x:win?side*(98+Math.sin(time*5+side)*5):side*(75+jump*9);
+  const hy=grip?p.y:win?-258+Math.sin(time*5+side)*12:-122-jump*29+(walk?step*side*12:0);
+  const ex=grip?62+Math.cos(phase)*7:side*(win?73:59),ey=grip?-170+Math.sin(phase)*10:win?-208:-140-jump*12;
+  const arm=`M${side*32} -159 Q${ex} ${ey} ${hx} ${hy}`;
+  line(c,arm,INK,27);line(c,arm,shirt,20);
+  const angle=grip?p.angle:win?-side*.22:side*.18;
+  c.save();c.translate(hx,hy);c.rotate(angle);
+  box(c,-12,4,24,10,3,shirt);
+  if(!grip)c.scale(side,1);
+  if(win)raisedHands.push(()=>{c.save();c.translate(hx,hy);c.rotate(angle);c.scale(side,1);drawHand(c,skin,'fist');c.restore();});
+  else drawHand(c,skin,grip?'grip':'relaxed');c.restore();
+ }
  // Hoodie, stitched pocket and contrasting cuff.
  path(c,'M-29 -176 Q0 -187 32 -175 Q46 -150 43 -94 Q1 -80 -43 -94 Q-45 -146 -29 -176Z',shirt);
  path(c,'M-29 -115 Q0 -124 29 -115 L25 -96 L-25 -96Z',shirt,INK,3);line(c,'M0 -167 L0 -124',INK,3);line(c,'M-12 -166 L-15 -139 M12 -166 L15 -139','#fff8e6',4);path(c,'M-28 -177 Q0 -154 30 -176 L15 -189 L-14 -188Z',shirt,INK,4);
@@ -60,6 +90,8 @@ export function drawCharacter(c,{x=0,y=0,scale=1,kind=0,look={},time=0,jump=0,em
  if(miss){path(c,'M-13 -190 Q3 -207 23 -190',null,INK,4);oval(c,50,-239,5,10,'#6bddeb',INK,2);}
  else{path(c,excited?'M-24 -202 Q3 -179 29 -200 Q22 -157 -7 -170 Q-22 -179 -24 -202Z':'M-20 -201 Q4 -181 27 -200 Q14 -168 -8 -181Z','#60252e',INK,3);path(c,'M-15 -199 Q4 -188 22 -198 L17 -188 Q0 -184 -11 -192Z','#fffdf2',null);if(excited)oval(c,8,-175,12,5,'#ff8194',null);}
  }
+ // Raised fists stay visible in front of ponytails and caps.
+ for(const draw of raisedHands)draw();
  if(emotion==='frozen'){oval(c,0,-155,108,170,'#88e7f744','#3182a6',4);for(const sx of [-75,72])line(c,`M${sx} -190 v28 m-12 -20 l24 12 m-24 0 l24 -12`,'#fff',4);}
  if(emotion==='shield'){oval(c,0,-153,112,175,'#ffe96a22','#ffe468',5);}
  c.restore();
@@ -90,12 +122,12 @@ export function scenePose(engine,time,screen){
  const e=engine?.current;return {phase:screen==='gameplay'?(e?.phase||0):time*2.6,jump:screen==='gameplay'?Math.max(jumpHeight(e?.jumpAge??9),e?.state!=='skipping'&&e?.previewJumpSlot===e?.current?jumpHeight(e?.previewJumpAge??9):0):jumpHeight((time+.38)%(Math.PI*2/2.6))};
 }
 // Quadratic rope path: at the collision phase its midpoint is just above the feet.
-export function holderGrip(x,floor,scale,flip,phase){const s=scale;return [x+(flip?-1:1)*(77+Math.cos(phase)*6)*s,floor+(-235+Math.sin(phase)*12)*s];}
+export function holderGrip(x,floor,scale,flip,phase){const p=holderArmPose(phase),sign=flip?-1:1;return [x+sign*(p.x+23*Math.sin(p.angle))*scale,floor+(p.y-23*Math.cos(p.angle))*scale];}
 export function cartoonRope(phase,floor,scale=1){
  const start=holderGrip(130,floor,scale,false,phase),end=holderGrip(870,floor,scale,true,phase),y=start[1];
  // One smooth orbit around raised, anchored hands. Bottom crosses at phase zero;
  // the upper half clears the head rather than clamping into a repeated U shape.
- const radius=235*scale-8,mid=y+Math.cos(phase)*radius;
+ const radius=235*scale-8,mid=floor-8-radius*(1-Math.cos(phase));
  return {start,control:[500+Math.sin(phase)*48*scale,2*mid-y],end};
 }
 export function playgroundLayout(h){const horizon=Math.max(65,Math.min(h*.40,h-420));return {horizon,courtTop:horizon+126,spectatorFloor:horizon+165};}

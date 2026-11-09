@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 await build({entryPoints:['src/cartoon-art.js'],outfile:'.test-tmp/rope-art.mjs',bundle:true,format:'esm',platform:'node'});
-const {cartoonRope,holderGrip,playgroundLayout,courtActors}=await import('../.test-tmp/rope-art.mjs');
+const {cartoonRope,holderGrip,holderArmPose,playgroundLayout,courtActors}=await import('../.test-tmp/rope-art.mjs');
 test('cartoon rope sweeps under the feet at collision, over the head halfway through and keeps both handles anchored',()=>{
  const floor=900,scale=1.3;
  for(let i=0;i<720;i++){const p=cartoonRope(i*Math.PI/180,floor,scale);for(const value of [...p.start,...p.control,...p.end])assert.ok(Number.isFinite(value));assert.equal(p.start[1],p.end[1]);const mid=p.start[1]*.25+p.control[1]*.5+p.end[1]*.25;assert.ok(mid<=floor);}
@@ -17,4 +17,16 @@ test('rope ends use the same closed-fist anchors and spectators stand below the 
 
 test('phone crew shares one age/scale and has clear separation from each other and the control dock',()=>{
  for(const [w,h] of [[360,740],[384,844],[576,1280],[1100,700]]){const a=courtActors(w,h);assert.equal(a.positions[1]-a.positions[0],a.positions[2]-a.positions[1]);assert.ok(a.positions[1]-a.positions[0]>290*a.scale);assert.ok(a.floor/a.h<.73);assert.ok(a.floor-350*a.scale>0);const rope=cartoonRope(Math.PI,a.floor,a.scale);const middle=(rope.start[1]+rope.control[1])/2;assert.ok(middle<a.floor-(350+97)*a.scale,'overhead rope clears hair even with a warm-up hop');}
+});
+
+test('both closed grips rotate with the rope and stay attached to the same handle tip',()=>{
+ let minY=Infinity,maxY=-Infinity,minA=Infinity,maxA=-Infinity;
+ for(let i=0;i<=360;i++){
+  const phase=i*Math.PI/180,p=holderArmPose(phase);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);minA=Math.min(minA,p.angle);maxA=Math.max(maxA,p.angle);
+  for(const flip of [false,true]){const origin=flip?870:130,scale=1.2,tip=holderGrip(origin,900,scale,flip,phase),sign=flip?-1:1;
+   assert.ok(Math.abs(tip[0]-(origin+sign*(p.x+23*Math.sin(p.angle))*scale))<1e-8);
+   assert.ok(Math.abs(tip[1]-(900+(p.y-23*Math.cos(p.angle))*scale))<1e-8);
+  }
+ }
+ assert.ok(maxY-minY>=44,'visible forearm swing');assert.ok(maxA-minA>.7,'wrist rotates the held handle');
 });

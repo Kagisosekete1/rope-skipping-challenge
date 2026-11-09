@@ -101,3 +101,9 @@ Holders raise their anchored hands so a continuous elliptical rope sweep clears
 both feet and hair. Rear and front segments use depth order without snapping
 the rope to a body envelope. BeatBot has metal piston legs, knee hubs and robot
 feet, with no human sneakers. The helicopter now travels nose-first to the right.
+
+### Articulated hands (3.2.2)
+Rope holders use one shared wrist/handle pose for their bent sleeves, rotating
+grip and rope endpoint. The foreground redraw uses that same hand artwork,
+replacing the old static rectangular fist. Resting hands have compact rounded
+fingers; victory uses small clenched fists and alternating bent-arm pumps.

@@ -16,7 +16,7 @@ The game shell and solo/two-player-on-one-device play work offline after a succe
 
 Download `https://rope-skipping-challenge-kagiso.seketefilmstv.chatgpt.site/downloads/Rope-Skipping-Challenge-test.apk`.
 
-This is a **debug-signed Android test build**, application ID `com.seketefilms.ropeskipping`, version 3.2.1, minimum Android 6 (API 23), target API 35. A compatible modern Android WebView with Canvas 2D is required. It uses Capacitor to open the live HTTPS game. It is a website-backed Android app, not a self-contained offline native port. The native launcher uses matching original Cartoon Edition artwork.
+This is a **debug-signed Android test build**, application ID `com.seketefilms.ropeskipping`, version 3.2.2, minimum Android 6 (API 23), target API 35. A compatible modern Android WebView with Canvas 2D is required. It uses Capacitor to open the live HTTPS game. It is a website-backed Android app, not a self-contained offline native port. The native launcher uses matching original Cartoon Edition artwork.
 
 You can send the APK file or its download link through a sharing platform. Android may ask you to allow installation from your chosen browser/file app. A Play Store release needs your own persistent release-signing key and store setup; this test build is not a store submission.
 
